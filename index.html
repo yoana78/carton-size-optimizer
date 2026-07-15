@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title id="seoTitle">Carton Box Size Calculator &amp; Pallet Loading Designer</title>
+  <meta name="description" id="seoDesc" content="Enter your product size and get the carton inner/outer dimensions, RSC dieline, and the arrangement that loads the most units on a pallet. Free carton box designer with 3D simulation.">
+  <!-- meta keywords intentionally omitted: Google has ignored it for ranking
+       since 2009, so it only leaks keyword strategy to competitors. -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://carton-size-optimizer.pages.dev/">
+  <meta name="author" content="Carton Box Designer">
+  <meta name="theme-color" content="#0284C7">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Carton Box Designer">
+  <meta property="og:url" content="https://carton-size-optimizer.pages.dev/">
+  <meta property="og:title" id="ogTitle" content="Carton Box Size Calculator &amp; Pallet Loading Designer">
+  <meta property="og:description" id="ogDesc" content="Product size in, carton size out — with RSC dieline and the arrangement that loads the most units per pallet.">
+  <meta property="og:locale" id="ogLocale" content="en_US">
+  <meta property="og:image" content="https://carton-size-optimizer.pages.dev/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Carton Box Designer - carton sizing and pallet loading simulation">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twTitle" content="Carton Box Size Calculator &amp; Pallet Loading Designer">
+  <meta name="twitter:description" id="twDesc" content="Product size in, carton size out — with RSC dieline and pallet loading simulation.">
+  <meta name="twitter:image" content="https://carton-size-optimizer.pages.dev/og-image.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --panel: #FFFFFF;
+      --panel-2: #F1F5F9;
+      --line: #E2E8F0;
+      --line-soft: #F8FAFC;
+      --ink: #0F172A;
+      --ink-dim: #475569;
+      --ink-faint: #94A3B8;
+      --cyan: #0284C7;
+      --cyan-dim: rgba(2, 132, 199, 0.08);
+      --amber: #D97706;
+      --danger: #EF4444;
+      --box-a: #D2A06A;
+      --box-a-line: #F8C690;
+      --box-b: #B88650;
+      --box-b-line: #DEAC76;
+      --inbox: #E8C49B;
+      --inbox-line: #A9762F;
+      --radius: 12px;
+      --sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--ink); font-family: var(--sans);
+      min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5;
+    }
+
+    header {
+      background: var(--panel); border-bottom: 1px solid var(--line);
+      padding: 16px 24px; display: flex; justify-content: space-between;
+      align-items: center; position: sticky; top: 0; z-index: 100;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--cyan), var(--amber));
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #FFFFFF; font-size: 18px;
+    }
+    .brand-text h1 { font-size: 16px; font-weight: 600; color: var(--ink); }
+    .brand-text span { font-size: 11px; color: var(--ink-faint); display: block; font-family: var(--mono); }
+
+    .lang-selector { display: flex; gap: 8px; }
+    .lang-btn {
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 20px;
+      padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--ink-dim); font-weight: 500; transition: all 0.2s;
+    }
+    .lang-btn.active {
+      border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim);
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.1);
+    }
+    .lang-btn:hover:not(.active) { border-color: var(--ink-dim); color: var(--ink); }
+
+    .container {
+      max-width: 1240px; width: 100%; margin: 0 auto; padding: 24px;
+      flex: 1; display: flex; flex-direction: column;
+    }
+
+    .adsense-placeholder {
+      background: var(--panel); border: 1px dashed var(--line); border-radius: var(--radius);
+      padding: 12px; margin: 16px 0; text-align: center; color: var(--ink-faint);
+      font-family: var(--mono); font-size: 11px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; min-height: 90px;
+      position: relative; overflow: hidden;
+    }
+    .adsense-placeholder::before {
+      content: 'GOOGLE ADSENSE'; font-size: 10px; letter-spacing: 0.15em;
+      color: var(--cyan); opacity: 0.7; margin-bottom: 4px; font-weight: 600;
+    }
+
+    .step-container { width: 100%; transition: opacity 0.3s ease, transform 0.3s ease; }
+    .hidden { display: none !important; opacity: 0; }
+
+    .input-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      max-width: 680px; margin: 0 auto; box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08); overflow: hidden;
+    }
+    .card-header { background: var(--panel-2); border-bottom: 1px solid var(--line); padding: 20px 24px; }
+    .card-header h2 { font-size: 18px; font-weight: 600; color: var(--ink); }
+    .card-header p { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
+
+    .form-group-title {
+      font-size: 13.5px; font-weight: 700; letter-spacing: 0.03em; color: var(--ink);
+      padding: 16px 24px; border-bottom: 2px solid var(--cyan); background: var(--panel-2);
+    }
+    .form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      padding: 16px 24px; border-bottom: 1px solid var(--line-soft);
+    }
+    @media (max-width: 580px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* min-width:0 — grid/flex children default to min-content, which stops the
+       3 dimension boxes from shrinking and pushes them out of the card */
+    .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .field label { font-size: 12.5px; font-weight: 500; color: var(--ink-dim); }
+    .field-wide { grid-column: span 2; }
+    @media (max-width: 580px) { .field-wide { grid-column: span 1; } }
+    .hint { font-size: 11px; color: var(--ink-faint); line-height: 1.5; }
+
+    .input-unit { display: flex; align-items: center; position: relative; }
+    .input-unit input, .input-unit select {
+      width: 100%; background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: 6px; color: var(--ink); padding: 10px 42px 10px 12px;
+      font-family: var(--mono); font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    .input-unit select {
+      padding-right: 32px; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+    }
+    .input-unit input:focus, .input-unit select:focus { border-color: var(--cyan); }
+    .input-unit input:disabled { color: var(--ink-faint); cursor: not-allowed; opacity: 0.65; }
+    .input-unit .unit { position: absolute; right: 12px; font-size: 12px; color: var(--ink-faint); font-weight: 500; }
+
+    .dims-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; min-width: 0; }
+    .dim-sub { position: relative; min-width: 0; }
+    .dim-sub span {
+      position: absolute; top: -7px; left: 8px; background: var(--panel);
+      padding: 0 4px; font-size: 9px; color: var(--ink-faint); font-family: var(--mono); z-index: 1;
+    }
+    .dim-sub input {
+      width: 100%; min-width: 0;
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px;
+      color: var(--ink); font-family: var(--mono); font-size: 13.5px; outline: none;
+      text-align: center; padding: 13px 6px 9px; transition: border-color 0.2s;
+    }
+    .dim-sub input:focus { border-color: var(--cyan); }
+    .dim-sub input:disabled { color: var(--ink-faint); cursor: not-allowed; opacity: 0.65; }
+
+    .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px 0; user-select: none; }
+    .checkbox-row input { width: 16px; height: 16px; accent-color: var(--cyan); cursor: pointer; }
+    .checkbox-row span { font-size: 13px; color: var(--ink-dim); }
+
+    .card-footer { padding: 24px; text-align: center; background: var(--panel-2); border-top: 1px solid var(--line); }
+    .btn-calc {
+      width: 100%; background: linear-gradient(135deg, #0284c7, #38bdf8); border: none;
+      border-radius: 8px; color: #FFFFFF; font-size: 16px; font-weight: 700; padding: 14px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2); transition: all 0.2s;
+    }
+    .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(2, 132, 199, 0.3); }
+
+    .loader-card { max-width: 480px; margin: 80px auto; text-align: center; }
+    .spinner {
+      width: 56px; height: 56px; border: 4px solid var(--line); border-top-color: var(--cyan);
+      border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-card p { font-size: 15px; color: var(--ink-dim); }
+
+    .result-section { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 1024px) { .result-section { grid-template-columns: 1fr; } }
+
+    .dashboard-panel {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      display: flex; flex-direction: column; height: 100%;
+    }
+    .dashboard-title {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; color: var(--amber);
+      padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between;
+    }
+    .kpi-card { padding: 16px 20px; border-bottom: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 4px; }
+    .kpi-card.main { background: rgba(2, 132, 199, 0.02); }
+    .kpi-card.accent { background: rgba(217, 119, 6, 0.02); }
+    .kpi-label { font-size: 12px; color: var(--ink-dim); font-weight: 600; }
+    .kpi-value { font-size: 22px; font-weight: 700; color: var(--ink); display: flex; align-items: baseline; gap: 4px; }
+    .kpi-value span { font-size: 13px; color: var(--ink-dim); font-weight: 400; }
+    .kpi-value.large { font-size: 28px; color: var(--cyan); }
+    .kpi-value.accent-val { font-size: 28px; color: var(--amber); }
+    .kpi-sub { font-size: 11.5px; color: var(--ink-faint); }
+
+    .graphics-panel { display: flex; flex-direction: column; gap: 24px; }
+    .viz-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+    .viz-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .viz-head h3 { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .pattern-badge {
+      font-family: var(--mono); font-size: 10.5px; padding: 3px 8px; border-radius: 4px;
+      border: 1px solid var(--cyan-dim); color: var(--cyan); background: rgba(2, 132, 199, 0.04);
+    }
+
+    svg.viz { width: 100%; height: auto; display: block; border-radius: 6px; }
+    svg#isoSvg, svg#inboxSvg {
+      background: radial-gradient(ellipse at 50% 30%, #FFFFFF 0%, #F1F5F9 78%);
+      border: 1px solid var(--line);
+    }
+    canvas#dielineCanvas { width: 100%; height: auto; display: block; background: #FFFFFF; border: 1px solid var(--line); border-radius: 6px; }
+
+    .legend { display: flex; gap: 16px; margin-top: 14px; font-size: 11px; color: var(--ink-dim); justify-content: center; flex-wrap: wrap; }
+    .legend .li { display: flex; align-items: center; gap: 6px; }
+    .legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+    .orient-strip {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--line-soft); justify-content: center;
+    }
+    .orient-strip .oi { font-size: 11.5px; color: var(--ink-dim); font-family: var(--mono); }
+    .orient-strip .oi b { color: var(--cyan); font-weight: 600; }
+
+    .result-grid-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 960px) { .result-grid-bottom { grid-template-columns: 1fr; } }
+
+    .btn-reset-container { margin-top: 24px; text-align: center; }
+    .btn-reset {
+      background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+      font-size: 15px; font-weight: 600; padding: 12px 32px; border-radius: 6px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-reset:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    footer.bottom-info {
+      text-align: center; margin-top: auto; padding: 40px 24px 24px; font-size: 11.5px;
+      color: var(--ink-faint); line-height: 1.6; border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .warn-box {
+      display: none; background: rgba(239, 68, 68, 0.04); border: 1px solid var(--danger);
+      color: var(--danger); font-size: 13px; padding: 14px; border-radius: 6px;
+      margin-bottom: 20px; font-family: var(--mono); text-align: center;
+    }
+    .warn-box.show { display: block; }
+
+    /* SEO / crawlable content */
+    .seo-content {
+      max-width: 880px; width: 100%; margin: 40px auto 0; padding: 28px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    }
+    .seo-content h2 {
+      font-size: 17px; font-weight: 700; color: var(--ink); margin: 30px 0 12px;
+      padding-bottom: 8px; border-bottom: 2px solid var(--cyan);
+    }
+    .seo-content h2:first-child { margin-top: 0; }
+    .seo-content p { font-size: 13.5px; color: var(--ink-dim); line-height: 1.8; }
+    .seo-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .seo-table th, .seo-table td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; }
+    .seo-table th { background: var(--panel-2); color: var(--ink); font-weight: 600; }
+    .seo-table td { color: var(--ink-dim); }
+    .seo-table td:nth-child(2) { font-family: var(--mono); white-space: nowrap; }
+    .seo-faq details { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: var(--panel-2); overflow: hidden; }
+    .seo-faq summary {
+      cursor: pointer; padding: 13px 14px; font-size: 13.5px; font-weight: 600; color: var(--ink);
+      list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .seo-faq summary::-webkit-details-marker { display: none; }
+    .seo-faq summary::after { content: '+'; color: var(--cyan); font-weight: 700; font-size: 17px; flex-shrink: 0; }
+    .seo-faq details[open] summary::after { content: '−'; }
+    .seo-faq details p { padding: 0 14px 14px; margin: 0; font-size: 13px; line-height: 1.8; background: var(--panel); }
+
+    .print-header { display: none; }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        /* margin:0 suppresses the browser's own header/footer (date, URL, page no.);
+           content margins come from .container padding below */
+        margin: 0;
+      }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: #FFFFFF !important; display: block !important; min-height: 0 !important; }
+      header, .adsense-placeholder, .btn-reset-container, footer,
+      .lang-selector, .warn-box, .seo-content, #stepInput, #stepLoading {
+        display: none !important; height: 0 !important; overflow: hidden !important;
+        margin: 0 !important; padding: 0 !important; border: none !important; visibility: hidden !important;
+      }
+      #stepResult, #stepResult.hidden {
+        display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important;
+      }
+      .container {
+        display: block !important; flex: none !important; height: auto !important;
+        padding: 10mm !important; margin: 0 !important; max-width: 100% !important;
+      }
+      .print-header {
+        display: block !important; font-size: 15px; font-weight: 800; color: #0284C7;
+        border-bottom: 3px double #0284C7; padding: 4px 0 7px 0; margin-bottom: 10px;
+        text-align: center;
+      }
+      .print-header .print-date { display: block; font-size: 9px; font-weight: 400; color: #64748B; margin-top: 3px; }
+      /* block flow so pagination fills page 1 (a CSS grid cannot fragment) */
+      .result-section { display: block !important; }
+      .result-section > .dashboard-panel { width: 100% !important; margin-bottom: 8px !important; }
+      .dashboard-panel { display: block !important; }
+      .dashboard-panel .adsense-placeholder { display: none !important; }
+      .dashboard-panel .kpi-card {
+        display: inline-block !important; width: 32.8% !important; vertical-align: top !important;
+        border-bottom: none !important; border-right: 1px solid #E2E8F0 !important; padding: 6px 9px !important;
+      }
+      .kpi-label { font-size: 8px !important; }
+      .kpi-value { font-size: 13px !important; }
+      .kpi-value.large, .kpi-value.accent-val { font-size: 15px !important; }
+      .kpi-value span { font-size: 8px !important; }
+      .kpi-sub { font-size: 7px !important; }
+      .dashboard-title { font-size: 9px !important; padding: 6px 10px !important; }
+      .graphics-panel { gap: 8px !important; }
+      .viz-card { border: 1px solid #CBD5E1 !important; padding: 7px !important; page-break-inside: avoid !important; }
+      .viz-head { margin-bottom: 4px !important; }
+      .viz-head h3 { font-size: 9px !important; }
+      .pattern-badge { font-size: 7px !important; }
+      .legend { font-size: 6.5px !important; gap: 8px !important; margin-top: 3px !important; }
+      .orient-strip { margin-top: 4px !important; padding-top: 4px !important; }
+      .orient-strip .oi { font-size: 7px !important; }
+      /* A4 is ~794px wide, so the max-width:960px mobile rule would otherwise
+         collapse this to one column and push SIDE VIEW onto page 2. */
+      .result-grid-bottom { grid-template-columns: 1fr 1fr !important; gap: 8px !important;
+                            page-break-inside: avoid !important; }
+      /* keep every card small enough that the whole report lands on one A4 */
+      #isoSvg { max-height: 46mm !important; }
+      #inboxSvg { max-height: 34mm !important; }
+      #topSvg, #sideSvg { max-height: 40mm !important; }
+      canvas#dielineCanvas { max-height: 34mm !important; object-fit: contain !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">C</div>
+      <div class="brand-text">
+        <h1 id="txtHeaderBrand">Carton Box &amp; Pallet Loading Designer</h1>
+        <span>Carton Box Designer</span>
+      </div>
+    </div>
+    <div class="lang-selector">
+      <button class="lang-btn" onclick="switchLang('ko')" id="btnLangKo">🇰🇷 ko</button>
+      <button class="lang-btn active" onclick="switchLang('en')" id="btnLangEn">🇺🇸 en</button>
+      <button class="lang-btn" onclick="switchLang('zh')" id="btnLangZh">🇨🇳 zh</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="printReportTitle" class="print-header"></div>
+
+    <!-- TOP LEADERBOARD AD -->
+    <div class="adsense-placeholder" style="max-width: 970px; width: 100%; margin: 0 auto 24px;">
+      <div style="font-size: 12px; color: var(--ink-dim);">AdSense Banner Area (728×90 / 970×90)</div>
+    </div>
+
+    <div class="warn-box" id="warnBox"></div>
+
+    <!-- ==============================================
+         STEP 1: INPUT SCREEN
+         ============================================== -->
+    <div id="stepInput" class="step-container">
+      <div class="input-card">
+        <div class="card-header">
+          <h2 id="txtFormTitle">Carton Box Specification</h2>
+          <p id="txtFormSub">Enter your product size and let the tool size the carton for the best pallet load.</p>
+        </div>
+
+        <!-- UNIT SETTINGS -->
+        <div class="form-group-title" id="txtGrpUnits">00 · UNIT SETTINGS</div>
+        <div class="form-row">
+          <div class="field">
+            <label id="lblLenUnit">Length Unit</label>
+            <div class="input-unit">
+              <select id="lenUnit" onchange="changeUnits()">
+                <option value="mm" selected>mm (Millimeters)</option>
+                <option value="cm">cm (Centimeters)</option>
+                <option value="inch">inch (Inches)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblWeightUnit">Weight Unit</label>
+            <div class="input-unit">
+              <select id="weightUnit" onchange="changeUnits()">
+                <option value="kg" selected>kg (Kilograms)</option>
+                <option value="lb">lb (Pounds)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRODUCT -->
+        <div class="form-group-title" id="txtGrpProduct">01 · PRODUCT (INBOX)</div>
+        <div class="form-row">
+          <div class="field field-wide">
+            <label id="lblInboxDims">Product / Inbox Size (L × W × H)</label>
+            <div class="dims-inputs">
+              <div class="dim-sub"><span id="tagInL">L (mm)</span><input type="number" id="inL" value="70"></div>
+              <div class="dim-sub"><span id="tagInW">W (mm)</span><input type="number" id="inW" value="50"></div>
+              <div class="dim-sub"><span id="tagInH">H (mm)</span><input type="number" id="inH" value="120"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblInWeight">Weight per Product</label>
+            <div class="input-unit">
+              <input type="number" id="inWeight" value="0.25" min="0" step="0.01">
+              <span class="unit unit-weight">kg</span>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblGap">Clearance Gap</label>
+            <div class="input-unit">
+              <input type="number" id="gap" value="3" min="0" step="0.5">
+              <span class="unit unit-len">mm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARRANGEMENT -->
+        <div class="form-group-title" id="txtGrpArrange">02 · CARTON ARRANGEMENT</div>
+        <div class="form-row">
+          <div class="field field-wide">
+            <label class="checkbox-row">
+              <input type="checkbox" id="autoArrange" checked>
+              <span id="lblAutoArrange"><b>Max Load</b> (auto-optimize arrangement)</span>
+            </label>
+            <div class="hint" id="hintAutoArrange">Finds the carton arrangement that loads the most products on one pallet, without exceeding the carton weight limit.</div>
+            <label class="checkbox-row" style="margin-top:6px;">
+              <input type="checkbox" id="singleLayer" checked>
+              <span id="lblSingleLayer">Single layer packing (1 high)</span>
+            </label>
+            <div class="hint" id="hintSingleLayer">Most cartons are packed one layer high. Uncheck to search multi-layer arrangements too.</div>
+          </div>
+          <div class="field field-wide">
+            <label id="lblArrange">Arrangement (X × Y × Z)</label>
+            <div class="dims-inputs">
+              <div class="dim-sub"><span>X</span><input type="number" id="arrX" value="2" min="1"></div>
+              <div class="dim-sub"><span>Y</span><input type="number" id="arrY" value="3" min="1"></div>
+              <div class="dim-sub"><span>Z</span><input type="number" id="arrZ" value="1" min="1"></div>
+            </div>
+            <div class="hint" id="arrHint">6 pcs per carton (2 × 3 × 1)</div>
+          </div>
+        </div>
+
+        <!-- MATERIAL -->
+        <div class="form-group-title" id="txtGrpMaterial">03 · MATERIAL &amp; WEIGHT</div>
+        <div class="form-row">
+          <div class="field">
+            <label id="lblFlute">Flute Type (board thickness)</label>
+            <div class="input-unit">
+              <select id="fluteType">
+                <option value="A" selected id="optFluteA">A-Flute (5.0 mm)</option>
+                <option value="B" id="optFluteB">B-Flute (3.0 mm)</option>
+                <option value="AB" id="optFluteAB">AB-Flute (8.0 mm)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblMaxCartonWeight">Max Carton Weight</label>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div class="input-unit">
+                <input type="number" id="maxCartonWeightInput" value="15" min="1" max="30" step="0.5">
+                <span class="unit unit-weight">kg</span>
+              </div>
+              <input type="range" id="maxCartonWeight" min="1" max="30" step="0.5" value="15" style="accent-color: var(--cyan); cursor: pointer; margin-top: 4px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- PALLET -->
+        <div class="form-group-title" id="txtGrpPallet">04 · PALLET &amp; STACK LIMIT</div>
+        <div class="form-row">
+          <div class="field">
+            <label id="lblPalletType">Pallet Type</label>
+            <div class="input-unit">
+              <select id="palletType">
+                <option value="T11" selected id="optPalletT11">T11 / KR·JP Standard (1100×1100 mm)</option>
+                <option value="euro" id="optPalletEuro">Euro Pallet EPAL / Europe Standard (1200×800 mm)</option>
+                <option value="us" id="optPalletUS">US Standard GMA / North America (1219×1016 mm / 48×40 in)</option>
+                <option value="iso" id="optPalletISO">ISO Industrial / Global Standard (1200×1000 mm)</option>
+                <option value="aus" id="optPalletAus">Australian Standard Pallet (1165×1165 mm)</option>
+                <option value="custom" id="optPalletCustom">Custom Size</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblPalletDims">Pallet Size (L × W × H)</label>
+            <div class="dims-inputs">
+              <div class="dim-sub"><span id="tagPalletL">L (mm)</span><input type="number" id="palletL" value="1100" disabled></div>
+              <div class="dim-sub"><span id="tagPalletW">W (mm)</span><input type="number" id="palletW" value="1100" disabled></div>
+              <div class="dim-sub"><span id="tagPalletH">H (mm)</span><input type="number" id="palletH" value="150" disabled></div>
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblMaxHeight">Max Stacking Height</label>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div class="input-unit">
+                <input type="number" id="maxHeightInput" value="1650" min="300" max="3000" step="10">
+                <span class="unit unit-len">mm</span>
+              </div>
+              <input type="range" id="maxHeight" min="300" max="3000" step="10" value="1650" style="accent-color: var(--cyan); cursor: pointer; margin-top: 4px;">
+            </div>
+          </div>
+          <div class="field">
+            <label id="lblOptions">Options</label>
+            <div>
+              <label class="checkbox-row">
+                <input type="checkbox" id="includePalletH" checked>
+                <span id="lblIncludeCheck">Include pallet height in total limit</span>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="orientFree" checked>
+                <span id="lblOrientFree">Any orientation (3-axis rotate)</span>
+              </label>
+            </div>
+          </div>
+          <div class="field field-wide">
+            <div class="hint" id="hintOrientFree">Uncheck to keep cartons upright (H stays vertical) — use this when the product has a “this side up” constraint.</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn-calc" onclick="triggerCalculation()">
+            <span id="btnCalculate">Design Carton &amp; Calculate Load</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         STEP 2: LOADING TRANSITION
+         ============================================== -->
+    <div id="stepLoading" class="step-container hidden">
+      <div class="loader-card">
+        <div class="spinner"></div>
+        <p id="txtLoadingMsg">Searching for the best carton size and pallet layout...</p>
+        <div class="adsense-placeholder" style="margin-top: 40px; min-height: 250px;">
+          <div style="font-size: 12px; color: var(--ink-dim);">Google AdSense Interstitial Ad / Banner Zone (300×250)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         STEP 3: RESULTS
+         ============================================== -->
+    <div id="stepResult" class="step-container hidden">
+      <div class="result-section">
+
+        <div class="dashboard-panel">
+          <div class="dashboard-title">
+            <span id="txtDshTitle">Design Results</span>
+            <span>DASHBOARD</span>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label" id="lblKpiInner">Carton Inner Size</div>
+            <div class="kpi-value" id="kpiInnerSize" style="font-size:16px;">—</div>
+            <div class="kpi-sub" id="lblKpiInnerSub">L × W × H (mm)</div>
+          </div>
+
+          <div class="kpi-card main">
+            <div class="kpi-label" id="lblKpiOuter">Carton Outer Size</div>
+            <div class="kpi-value large" id="kpiOuterSize" style="font-size:20px;">—</div>
+            <div class="kpi-sub" id="kpiFluteThickness">—</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label" id="lblKpiPerCarton">Products per Carton</div>
+            <div class="kpi-value" id="kpiPerCarton">—</div>
+            <div class="kpi-sub" id="kpiArrangement">—</div>
+          </div>
+
+          <div class="kpi-card accent">
+            <div class="kpi-label" id="lblKpiTotalProducts">Total Products on Pallet</div>
+            <div class="kpi-value accent-val" id="kpiTotalProducts">—</div>
+            <div class="kpi-sub" id="kpiInboxRatio">—</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label" id="lblKpiCartons">Cartons per Pallet</div>
+            <div class="kpi-value" id="kpiTotalCartons">—</div>
+            <div class="kpi-sub" id="kpiPatternLayers">—</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label" id="lblKpiCartonWeight">Weight per Carton</div>
+            <div class="kpi-value" id="kpiCartonWeight">—</div>
+            <div class="kpi-sub" id="kpiCartonWeightSub">—</div>
+          </div>
+
+          <!-- SIDEBAR AD -->
+          <div class="adsense-placeholder" style="margin: 16px; min-height: 200px; flex: 1;">
+            <div style="font-size: 11px; color: var(--ink-dim);">AdSense Sidebar Ad (250×250 / 250×300)</div>
+          </div>
+        </div>
+
+        <div class="graphics-panel">
+
+          <!-- CARTON CONTENT -->
+          <div class="viz-card">
+            <div class="viz-head">
+              <h3 id="txtTitleInbox">CARTON CONTENT · Product Arrangement</h3>
+              <span class="pattern-badge" id="inboxBadge">—</span>
+            </div>
+            <svg class="viz" id="inboxSvg" viewBox="0 0 860 440"></svg>
+            <div class="legend">
+              <div class="li"><span class="sw" style="background:var(--inbox);border:1px solid var(--inbox-line)"></span><span id="txtLegInbox">Product</span></div>
+              <div class="li"><span class="sw" style="background:var(--box-a)"></span><span id="txtLegCarton">Carton</span></div>
+              <div class="li"><span class="sw" style="background:var(--box-a);opacity:0.3;border:1px solid var(--box-a-line)"></span><span id="txtLegWall">Near wall (see-through)</span></div>
+            </div>
+          </div>
+
+          <!-- DIELINE -->
+          <div class="viz-card">
+            <div class="viz-head">
+              <h3 id="txtTitleDieline">DIELINE · RSC (A1) Blank</h3>
+              <span class="pattern-badge" id="txtDielineBadge">Outer size</span>
+            </div>
+            <canvas id="dielineCanvas" width="600" height="340"></canvas>
+            <div class="legend">
+              <div class="li"><span class="sw" style="border:1.5px solid var(--danger);background:transparent;"></span><span id="txtLegCut">Cut</span></div>
+              <div class="li"><span class="sw" style="border:1.5px dashed var(--cyan);background:transparent;"></span><span id="txtLegCrease">Crease</span></div>
+              <div class="li"><span class="sw" style="background:rgba(217,119,6,0.1);border:1.5px dashed var(--amber)"></span><span id="txtLegGlue">Glue tab</span></div>
+            </div>
+          </div>
+
+          <!-- 3D PALLET -->
+          <div class="viz-card">
+            <div class="viz-head">
+              <h3 id="txtTitle3D">3D VIEW · 45° Pallet Stack</h3>
+              <span class="pattern-badge" id="patternBadge">—</span>
+            </div>
+            <svg class="viz" id="isoSvg" viewBox="0 0 860 560"></svg>
+            <div class="legend">
+              <div class="li"><span class="sw" style="background:var(--box-a)"></span><span id="txtLegHor">Horizontal</span></div>
+              <div class="li"><span class="sw" style="background:var(--box-b)"></span><span id="txtLegVer">Rotated 90°</span></div>
+              <div class="li"><span class="sw" style="background:#5A3F1C;border:1px solid #7A5A22"></span><span id="txtLegPal">Pallet</span></div>
+            </div>
+            <div class="orient-strip" id="orientStrip"></div>
+          </div>
+
+          <!-- TOP / SIDE -->
+          <div class="result-grid-bottom">
+            <div class="viz-card">
+              <div class="viz-head"><h3 id="txtTitle2D">TOP VIEW · Layer Layout</h3></div>
+              <svg class="viz" id="topSvg" viewBox="0 0 480 480" style="max-width: 320px; margin: 0 auto;"></svg>
+            </div>
+            <div class="viz-card">
+              <div class="viz-head"><h3 id="txtTitleSide">SIDE VIEW · Stack Section</h3></div>
+              <svg class="viz" id="sideSvg" viewBox="0 0 240 480" style="max-height: 380px; margin: 0 auto;"></svg>
+            </div>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="btn-reset-container" style="display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
+            <button class="btn-reset" onclick="resetCalculator()">
+              <span id="btnBackToInput">← Back &amp; Edit inputs</span>
+            </button>
+            <button class="btn-calc" onclick="savePdf()" style="max-width: 220px; background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);" id="btnSavePdf">
+              💾 Save PDF
+            </button>
+            <button class="btn-calc" onclick="exportDielinePDF()" style="max-width: 220px; background: linear-gradient(135deg, #D97706, #B45309); box-shadow: 0 4px 15px rgba(217, 119, 6, 0.2);" id="btnDielinePdf">
+              📐 Dieline PDF
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         CRAWLABLE CONTENT (static English; JS re-renders for ko/zh)
+         ============================================== -->
+    <section class="seo-content" id="seoContent">
+      <h2 id="seoIntroH">What is the Carton Box Designer?</h2>
+      <p id="seoIntroP">The Carton Box Designer turns a product size into a finished carton specification. Enter the dimensions of one product (the inbox), and the tool works out the carton inner size, adds the flute allowance to get the outer size, draws the RSC dieline, and simulates how those cartons stack on a pallet. With Max Load enabled it searches every arrangement and picks the one that puts the most units on a single pallet without exceeding your carton weight limit. No install or sign-up, and the result can be saved as a PDF report or a dieline PDF.</p>
+
+      <h2 id="seoStdH">Flute Types and Board Allowance</h2>
+      <table class="seo-table" id="seoStdTable">
+        <thead><tr><th>Flute</th><th>Thickness</th><th>Typical use</th></tr></thead>
+        <tbody>
+          <tr><td>B-Flute</td><td>3.0 mm</td><td>Retail boxes, light goods, good printability</td></tr>
+          <tr><td>A-Flute</td><td>5.0 mm</td><td>General shipping cartons, good cushioning</td></tr>
+          <tr><td>AB-Flute (double wall)</td><td>8.0 mm</td><td>Heavy or stacked loads, export cartons</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="seoFaqH">Frequently Asked Questions (FAQ)</h2>
+      <div class="seo-faq" id="seoFaqList">
+        <details open><summary>How are the carton inner and outer dimensions calculated?</summary><p>The inner size is the product size multiplied by the arrangement plus a clearance gap on every side: inner length = product length × count + (count + 1) × gap. The outer size then adds the flute allowance, because corrugated board has real thickness and the box bulges slightly once assembled. A-flute adds roughly 6 mm to length and width and 9 mm to height.</p></details>
+        <details><summary>What is the difference between A-flute, B-flute and AB-flute?</summary><p>B-flute is about 3 mm thick with a fine profile — it prints well and suits retail packaging. A-flute is about 5 mm and gives more cushioning and stacking strength, so it is the usual choice for shipping cartons. AB-flute is a double wall around 8 mm, used for heavy contents or tall stacks where compression strength matters most.</p></details>
+        <details><summary>How many products should go in one carton?</summary><p>Two limits decide it: the carton weight and the pallet footprint. Manual handling guidance generally keeps a carton under about 15 kg. Beyond that, a carton that divides neatly into the pallet gives a better load — which is exactly what the Max Load option searches for, testing every arrangement that stays under your weight limit.</p></details>
+        <details><summary>What is an RSC box?</summary><p>RSC stands for Regular Slotted Container, the most common corrugated box. It is made from one blank: four side panels plus a glue tab, with flaps top and bottom. Each flap is half the box width, so the two outer flaps meet in the middle when closed. The dieline this tool draws is an RSC blank, with cut lines in red and crease (fold) lines in blue.</p></details>
+        <details><summary>How does carton size change pallet loading efficiency?</summary><p>A carton only loads well if its footprint divides into the pallet with little waste. On a 1,100 × 1,100 mm pallet, a carton of 550 × 366 mm tiles almost perfectly, while one a few millimetres larger can drop a whole row and lose 10% or more. Because the carton size follows from the arrangement, changing how many products go in each carton is usually the fastest way to raise the load.</p></details>
+        <details><summary>Why does the clearance gap matter?</summary><p>Products are never exactly their nominal size — labels, seams and slight bulging all add a little. Leaving a 2–3 mm gap around each product prevents the case where everything fits on paper but not on the packing line. The gap is included when the carton size is calculated, so it flows through to the outer size and the pallet load.</p></details>
+      </div>
+    </section>
+
+    <!-- BOTTOM LEADERBOARD AD -->
+    <div class="adsense-placeholder" style="max-width: 970px; width: 100%; margin: 24px auto 0;">
+      <div style="font-size: 12px; color: var(--ink-dim);">AdSense Bottom Banner (728×90 / 970×90)</div>
+    </div>
+
+  </div>
+
+  <footer class="bottom-info">
+    <p>© 2026 Carton Box Designer. All rights reserved.</p>
+    <p style="margin-top: 6px; opacity: 0.7;" id="txtFooterDesc">A free carton box sizing and pallet loading calculator with RSC dieline output and 3D stacking simulation.</p>
+  </footer>
+
+  <!-- ========================================================
+       STRUCTURED DATA (JSON-LD)
+       Answers must stay in sync with the visible FAQ above — Google treats
+       schema that isn't on the page as a violation.
+       ======================================================== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://carton-size-optimizer.pages.dev/#app",
+        "name": "Carton Box Designer",
+        "url": "https://carton-size-optimizer.pages.dev/",
+        "description": "Free carton box size calculator. Enter a product size to get the carton inner and outer dimensions, an RSC dieline, and the arrangement that loads the most units on a pallet.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "Requires JavaScript",
+        "inLanguage": ["en", "ko", "zh"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Carton inner and outer size from product dimensions",
+          "Automatic arrangement search for maximum pallet load",
+          "Carton weight limit constraint",
+          "RSC (A1) dieline drawing with cut and crease lines",
+          "3D carton content and pallet stacking views",
+          "Grid, pinwheel and mixed-block pallet patterns",
+          "PDF report and dieline PDF export"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://carton-size-optimizer.pages.dev/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How are the carton inner and outer dimensions calculated?",
+            "acceptedAnswer": { "@type": "Answer", "text": "The inner size is the product size multiplied by the arrangement plus a clearance gap on every side: inner length = product length × count + (count + 1) × gap. The outer size then adds the flute allowance, because corrugated board has real thickness and the box bulges slightly once assembled. A-flute adds roughly 6 mm to length and width and 9 mm to height." }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the difference between A-flute, B-flute and AB-flute?",
+            "acceptedAnswer": { "@type": "Answer", "text": "B-flute is about 3 mm thick with a fine profile — it prints well and suits retail packaging. A-flute is about 5 mm and gives more cushioning and stacking strength, so it is the usual choice for shipping cartons. AB-flute is a double wall around 8 mm, used for heavy contents or tall stacks where compression strength matters most." }
+          },
+          {
+            "@type": "Question",
+            "name": "How many products should go in one carton?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Two limits decide it: the carton weight and the pallet footprint. Manual handling guidance generally keeps a carton under about 15 kg. Beyond that, a carton that divides neatly into the pallet gives a better load — which is exactly what the Max Load option searches for, testing every arrangement that stays under your weight limit." }
+          },
+          {
+            "@type": "Question",
+            "name": "What is an RSC box?",
+            "acceptedAnswer": { "@type": "Answer", "text": "RSC stands for Regular Slotted Container, the most common corrugated box. It is made from one blank: four side panels plus a glue tab, with flaps top and bottom. Each flap is half the box width, so the two outer flaps meet in the middle when closed. The dieline this tool draws is an RSC blank, with cut lines in red and crease (fold) lines in blue." }
+          },
+          {
+            "@type": "Question",
+            "name": "How does carton size change pallet loading efficiency?",
+            "acceptedAnswer": { "@type": "Answer", "text": "A carton only loads well if its footprint divides into the pallet with little waste. On a 1,100 × 1,100 mm pallet, a carton of 550 × 366 mm tiles almost perfectly, while one a few millimetres larger can drop a whole row and lose 10% or more. Because the carton size follows from the arrangement, changing how many products go in each carton is usually the fastest way to raise the load." }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does the clearance gap matter?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Products are never exactly their nominal size — labels, seams and slight bulging all add a little. Leaving a 2–3 mm gap around each product prevents the case where everything fits on paper but not on the packing line. The gap is included when the carton size is calculated, so it flows through to the outer size and the pallet load." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const fmt = n => typeof n === 'number' ? n.toLocaleString('en-US') : n;
+
+    // ---------- i18n ----------
+    const translations = {
+      en: {
+        seoTitle: "Carton Box Size Calculator & Pallet Loading Designer",
+        seoDesc: "Enter your product size and get the carton inner/outer dimensions, RSC dieline, and the arrangement that loads the most units on a pallet. Free carton box designer with 3D simulation.",
+        txtHeaderBrand: "Carton Box & Pallet Loading Designer",
+        txtFormTitle: "Carton Box Specification",
+        txtFormSub: "Enter your product size and let the tool size the carton for the best pallet load.",
+        txtGrpUnits: "00 · UNIT SETTINGS",
+        lblLenUnit: "Length Unit",
+        lblWeightUnit: "Weight Unit",
+        optPalletT11: "T11 / KR·JP Standard (1100×1100 mm)",
+        optPalletEuro: "Euro Pallet EPAL / Europe Standard (1200×800 mm)",
+        optPalletUS: "US Standard GMA / North America (1219×1016 mm / 48×40 in)",
+        optPalletISO: "ISO Industrial / Global Standard (1200×1000 mm)",
+        optPalletAus: "Australian Standard Pallet (1165×1165 mm)",
+        txtGrpProduct: "01 · PRODUCT (INBOX)",
+        lblInboxDims: "Product / Inbox Size (L × W × H)",
+        lblInWeight: "Weight per Product",
+        lblGap: "Clearance Gap",
+        txtGrpArrange: "02 · CARTON ARRANGEMENT",
+        lblAutoArrange: "<b>Max Load</b> (auto-optimize arrangement)",
+        hintAutoArrange: "Finds the carton arrangement that loads the most products on one pallet, without exceeding the carton weight limit.",
+        lblSingleLayer: "Single layer packing (1 high)",
+        hintSingleLayer: "Most cartons are packed one layer high. Uncheck to search multi-layer arrangements too.",
+        lblArrange: "Arrangement (X × Y × Z)",
+        txtGrpMaterial: "03 · MATERIAL & WEIGHT",
+        lblFlute: "Flute Type (board thickness)",
+        optFluteA: "A-Flute (5.0 mm)",
+        optFluteB: "B-Flute (3.0 mm)",
+        optFluteAB: "AB-Flute (8.0 mm)",
+        lblMaxCartonWeight: "Max Carton Weight",
+        txtGrpPallet: "04 · PALLET & STACK LIMIT",
+        lblPalletType: "Pallet Type",
+        optPalletCustom: "Custom Size",
+        lblPalletDims: "Pallet Size (L × W × H)",
+        lblMaxHeight: "Max Stacking Height",
+        lblOptions: "Options",
+        lblIncludeCheck: "Include pallet height in total limit",
+        lblOrientFree: "Any orientation (3-axis rotate)",
+        hintOrientFree: "Uncheck to keep cartons upright (H stays vertical) — use this when the product has a “this side up” constraint.",
+        btnCalculate: "Design Carton & Calculate Load",
+        txtLoadingMsg: "Searching for the best carton size and pallet layout...",
+        txtDshTitle: "Design Results",
+        lblKpiInner: "Carton Inner Size",
+        lblKpiInnerSub: "L × W × H (mm)",
+        lblKpiOuter: "Carton Outer Size",
+        lblKpiPerCarton: "Products per Carton",
+        lblKpiTotalProducts: "Total Products on Pallet",
+        lblKpiCartons: "Cartons per Pallet",
+        lblKpiCartonWeight: "Weight per Carton",
+        txtTitle3D: "3D VIEW · 45° Pallet Stack",
+        txtLegHor: "Horizontal",
+        txtLegVer: "Rotated 90°",
+        txtLegPal: "Pallet",
+        txtTitleInbox: "CARTON CONTENT · Product Arrangement",
+        txtLegInbox: "Product",
+        txtLegCarton: "Carton",
+        txtLegWall: "Near wall (see-through)",
+        txtTitleDieline: "DIELINE · RSC (A1) Blank",
+        txtDielineBadge: "Outer size",
+        txtLegCut: "Cut",
+        txtLegCrease: "Crease",
+        txtLegGlue: "Glue tab",
+        txtTitle2D: "TOP VIEW · Layer Layout",
+        txtTitleSide: "SIDE VIEW · Stack Section",
+        btnBackToInput: "← Back & Edit inputs",
+        btnSavePdf: "💾 Save PDF",
+        btnDielinePdf: "📐 Dieline PDF",
+        txtFooterDesc: "A free carton box sizing and pallet loading calculator with RSC dieline output and 3D stacking simulation.",
+        arrHint: "{qty} pcs per carton ({x} × {y} × {z})",
+        arrHintAuto: " · auto-optimized",
+        fluteApplied: "{name} ({t} mm applied)",
+        perCartonUnit: "pcs",
+        cartonWeightSub: "{qty} pcs × {w} kg",
+        cartonWeightLimit: " · {pct}% of {lim} kg limit",
+        cartonWeightNone: "No product weight entered",
+        inboxRatio: "{qty} pcs/carton × {n} cartons",
+        patternLayers: "{c} cartons/layer × {l} layers ({occ}% used)",
+        patternLayersW: " · pallet {w} kg",
+        reportTitle: "CARTON BOX & PALLET LOADING REPORT",
+        dateLabel: "Generated",
+        warnInput: "Please check the product and pallet dimensions.",
+        warnNoFit: "The carton does not fit the pallet or the height limit.",
+        warnNoArr: "No arrangement satisfies the constraints. Check the carton weight limit ({lim} kg) or the stacking height.",
+        warnOverWeight: "Carton weight {w} kg exceeds the {lim} kg limit. Adjust the arrangement or the limit.",
+        dielineTitle: "CARTON DIELINE - RSC (A1)",
+        dielineSub: "Flute: {flute} | Outer: {L}×{W}×{H} {u}"
+      },
+      ko: {
+        seoTitle: "카톤박스 사이즈 계산기 & 팔레트 적재 설계기",
+        seoDesc: "제품 규격만 입력하면 카톤 내경·외경, RSC 칼선 전개도, 팔레트에 가장 많이 실리는 배열까지 계산합니다. 3D 시뮬레이션 무료 카톤 설계기.",
+        txtHeaderBrand: "카톤 설계 & 팔레트 적재 시뮬레이터",
+        txtFormTitle: "카톤박스 사양 입력",
+        txtFormSub: "제품 규격을 입력하면 팔레트 적재에 가장 유리한 카톤 사이즈를 잡아드립니다.",
+        txtGrpUnits: "00 · 기본 단위 설정",
+        lblLenUnit: "길이 단위",
+        lblWeightUnit: "무게 단위",
+        optPalletT11: "아주팔레트 T11 / 한국·일본 표준 (1100×1100 mm)",
+        optPalletEuro: "유로 팔레트 EPAL / 유럽 표준 (1200×800 mm)",
+        optPalletUS: "미국 표준 GMA / 북미 (1219×1016 mm / 48×40 in)",
+        optPalletISO: "ISO 산업용 / 글로벌 표준 (1200×1000 mm)",
+        optPalletAus: "호주 표준 팔레트 (1165×1165 mm)",
+        txtGrpProduct: "01 · 제품 (인박스)",
+        lblInboxDims: "제품 / 인박스 크기 (장 × 폭 × 고)",
+        lblInWeight: "제품 1개 중량",
+        lblGap: "적재 유격 여유",
+        txtGrpArrange: "02 · 카톤 입수 배치",
+        lblAutoArrange: "<b>최대 적재</b> (배열 자동 최적화)",
+        hintAutoArrange: "카톤 최대 중량을 넘지 않는 범위에서, 팔레트에 제품이 가장 많이 실리는 배열을 자동으로 찾습니다.",
+        lblSingleLayer: "포장 배열 1단 (높이 1개)",
+        hintSingleLayer: "대부분의 경우 1단 배열입니다. 해제 시 높이 방향 다단 배열까지 탐색합니다.",
+        lblArrange: "포장 배열 (가로 × 세로 × 높이)",
+        txtGrpMaterial: "03 · 재질 및 중량",
+        lblFlute: "골 종류 (카톤 두께)",
+        optFluteA: "A골 (5.0 mm)",
+        optFluteB: "B골 (3.0 mm)",
+        optFluteAB: "AB골 (8.0 mm)",
+        lblMaxCartonWeight: "카톤 최대 중량",
+        txtGrpPallet: "04 · 팔레트 및 적재 제한",
+        lblPalletType: "팔레트 종류",
+        optPalletCustom: "직접입력 (Custom)",
+        lblPalletDims: "팔레트 크기 (장 × 폭 × 고)",
+        lblMaxHeight: "최대 적재 한계 높이",
+        lblOptions: "옵션",
+        lblIncludeCheck: "전체 높이에 팔레트 높이 포함",
+        lblOrientFree: "방향 무관 (3축 회전 자동최적화)",
+        hintOrientFree: "해제 시 카톤의 고(H)가 세로로 고정되어 세운 상태로만 적재합니다. 제품에 “이쪽이 위” 제약이 있으면 해제하세요.",
+        btnCalculate: "카톤 설계 및 적재 계산",
+        txtLoadingMsg: "최적의 카톤 사이즈와 적재 배치를 연산 중입니다...",
+        txtDshTitle: "설계 결과",
+        lblKpiInner: "카톤 내경",
+        lblKpiInnerSub: "장 × 폭 × 고 (mm)",
+        lblKpiOuter: "카톤 외경",
+        lblKpiPerCarton: "카톤당 제품 입수량",
+        lblKpiTotalProducts: "총 적재 제품 수량",
+        lblKpiCartons: "팔레트 적재 카톤 수",
+        lblKpiCartonWeight: "카톤 1박스 중량",
+        txtTitle3D: "3D VIEW · 45° 입체 적재도",
+        txtLegHor: "가로 배치",
+        txtLegVer: "세로 배치(90° 회전)",
+        txtLegPal: "팔레트",
+        txtTitleInbox: "카톤 내부 적입도 · 인박스 배열",
+        txtLegInbox: "인박스 (제품)",
+        txtLegCarton: "카톤 본체",
+        txtLegWall: "앞쪽 벽면 (투시)",
+        txtTitleDieline: "칼선 전개도 · RSC (A1형)",
+        txtDielineBadge: "외경 기준 도면",
+        txtLegCut: "자르는 선",
+        txtLegCrease: "접는 선",
+        txtLegGlue: "풀칠 접착부",
+        txtTitle2D: "TOP VIEW · 평면 배치도",
+        txtTitleSide: "SIDE VIEW · 단면 요약",
+        btnBackToInput: "← 다른 값 입력하여 재계산하기",
+        btnSavePdf: "💾 PDF 저장",
+        btnDielinePdf: "📐 칼선 PDF",
+        txtFooterDesc: "제품 규격으로 카톤 사이즈와 팔레트 적재를 계산하고 RSC 칼선 도면까지 뽑아주는 무료 설계 도구입니다.",
+        arrHint: "총 {qty}개입 구성 ({x} × {y} × {z})",
+        arrHintAuto: " · 자동 최적화됨",
+        fluteApplied: "{name} (골두께 {t} mm 적용)",
+        perCartonUnit: "개입",
+        cartonWeightSub: "{qty}개입 × {w}kg",
+        cartonWeightLimit: " · 한도 {lim}kg 대비 {pct}%",
+        cartonWeightNone: "제품 중량 미입력",
+        inboxRatio: "Box당 {qty}개입 × {n} Box",
+        patternLayers: "{c} Box/단 × {l}단 ({occ}% 점유)",
+        patternLayersW: " · 팔레트 {w}kg",
+        reportTitle: "카톤 설계 & 팔레트 적재 보고서",
+        dateLabel: "출력일시",
+        warnInput: "제품 크기 또는 팔레트 규격을 확인해주세요.",
+        warnNoFit: "카톤 외경이 팔레트 규격 또는 높이 제한을 초과하여 적재할 수 없습니다.",
+        warnNoArr: "조건을 만족하는 배열이 없습니다. 카톤 최대 중량({lim}kg) 또는 적재 높이를 확인해주세요.",
+        warnOverWeight: "카톤 중량 {w}kg 이 최대 중량 {lim}kg 을 초과합니다. 배열 또는 한도를 조정해주세요.",
+        dielineTitle: "카톤박스 도면 칼선 (Dieline) - RSC A1형",
+        dielineSub: "골종류: {flute} | 외경: {L}×{W}×{H} {u}"
+      },
+      zh: {
+        seoTitle: "纸箱尺寸计算器 & 托盘装载设计器",
+        seoDesc: "输入产品尺寸即可得出纸箱内径与外径、RSC刀模展开图，以及托盘装载数量最多的排列方案。免费3D仿真纸箱设计工具。",
+        txtHeaderBrand: "纸箱设计 & 托盘装载仿真器",
+        txtFormTitle: "纸箱规格输入",
+        txtFormSub: "输入产品尺寸，工具将自动计算最利于托盘装载的纸箱尺寸。",
+        txtGrpUnits: "00 · 基本单位设置",
+        lblLenUnit: "长度单位",
+        lblWeightUnit: "重量单位",
+        optPalletT11: "T11 托盘 / 韩日标准 (1100×1100 mm)",
+        optPalletEuro: "欧标托盘 EPAL / 欧洲标准 (1200×800 mm)",
+        optPalletUS: "美标 GMA / 北美 (1219×1016 mm / 48×40 in)",
+        optPalletISO: "ISO 工业用 / 全球标准 (1200×1000 mm)",
+        optPalletAus: "澳洲标准托盘 (1165×1165 mm)",
+        txtGrpProduct: "01 · 产品（内盒）",
+        lblInboxDims: "产品 / 内盒尺寸（长 × 宽 × 高）",
+        lblInWeight: "单个产品重量",
+        lblGap: "堆放间隙余量",
+        txtGrpArrange: "02 · 纸箱装箱排列",
+        lblAutoArrange: "<b>最大装载</b>（自动优化排列）",
+        hintAutoArrange: "在不超过纸箱最大重量的前提下，自动寻找托盘上装载产品最多的排列方案。",
+        lblSingleLayer: "装箱排列单层（高度1个）",
+        hintSingleLayer: "多数情况为单层排列。取消勾选后将同时搜索高度方向的多层排列。",
+        lblArrange: "装箱排列（长 × 宽 × 高）",
+        txtGrpMaterial: "03 · 材质与重量",
+        lblFlute: "楞型（纸箱厚度）",
+        optFluteA: "A楞（5.0 mm）",
+        optFluteB: "B楞（3.0 mm）",
+        optFluteAB: "AB楞（8.0 mm）",
+        lblMaxCartonWeight: "纸箱最大重量",
+        txtGrpPallet: "04 · 托盘与堆叠限制",
+        lblPalletType: "托盘类型",
+        optPalletCustom: "自定义尺寸",
+        lblPalletDims: "托盘尺寸（长 × 宽 × 高）",
+        lblMaxHeight: "最大堆叠限高",
+        lblOptions: "选项",
+        lblIncludeCheck: "总高度包含托盘高度",
+        lblOrientFree: "方向无关（3轴旋转自动优化）",
+        hintOrientFree: "取消勾选后纸箱的高（H）固定为垂直方向，仅以正立状态堆叠。产品有“此面向上”要求时请取消勾选。",
+        btnCalculate: "设计纸箱并计算装载",
+        txtLoadingMsg: "正在计算最优纸箱尺寸与装载排列...",
+        txtDshTitle: "设计结果",
+        lblKpiInner: "纸箱内径",
+        lblKpiInnerSub: "长 × 宽 × 高（mm）",
+        lblKpiOuter: "纸箱外径",
+        lblKpiPerCarton: "每箱装入产品数",
+        lblKpiTotalProducts: "托盘装载产品总数",
+        lblKpiCartons: "托盘装载纸箱数",
+        lblKpiCartonWeight: "单箱重量",
+        txtTitle3D: "3D VIEW · 45°立体装载图",
+        txtLegHor: "横向摆放",
+        txtLegVer: "纵向摆放（90°旋转）",
+        txtLegPal: "托盘",
+        txtTitleInbox: "纸箱内部装填图 · 内盒排列",
+        txtLegInbox: "内盒（产品）",
+        txtLegCarton: "纸箱本体",
+        txtLegWall: "前侧壁面（透视）",
+        txtTitleDieline: "刀模展开图 · RSC（A1型）",
+        txtDielineBadge: "外径基准图纸",
+        txtLegCut: "裁切线",
+        txtLegCrease: "折线",
+        txtLegGlue: "粘合处",
+        txtTitle2D: "TOP VIEW · 平面布置图",
+        txtTitleSide: "SIDE VIEW · 剖面摘要",
+        btnBackToInput: "← 返回重新输入数据",
+        btnSavePdf: "💾 保存 PDF",
+        btnDielinePdf: "📐 刀模 PDF",
+        txtFooterDesc: "根据产品尺寸计算纸箱规格与托盘装载，并输出RSC刀模图纸的免费设计工具。",
+        arrHint: "共 {qty} 个装（{x} × {y} × {z}）",
+        arrHintAuto: " · 已自动优化",
+        fluteApplied: "{name}（楞厚 {t} mm）",
+        perCartonUnit: "个装",
+        cartonWeightSub: "{qty}个装 × {w}kg",
+        cartonWeightLimit: " · 占限额 {lim}kg 的 {pct}%",
+        cartonWeightNone: "未输入产品重量",
+        inboxRatio: "每箱 {qty} 个 × {n} 箱",
+        patternLayers: "{c} 箱/层 × {l} 层（占用 {occ}%）",
+        patternLayersW: " · 托盘 {w}kg",
+        reportTitle: "纸箱设计 & 托盘装载报告",
+        dateLabel: "生成日期",
+        warnInput: "请确认产品尺寸或托盘规格。",
+        warnNoFit: "纸箱外径超出托盘规格或限高，无法装载。",
+        warnNoArr: "没有符合条件的排列。请确认纸箱最大重量（{lim}kg）或堆叠高度。",
+        warnOverWeight: "纸箱重量 {w}kg 超过最大重量 {lim}kg。请调整排列或限额。",
+        dielineTitle: "纸箱刀模展开图 (Dieline) - RSC A1型",
+        dielineSub: "楞型: {flute} | 外径: {L}×{W}×{H} {u}"
+      }
+    };
+
+    let currentLang = 'en';
+
+    // Single source of truth for the L/W/H axis labels used by the 3D view.
+    const AXIS_LABELS = {
+      ko: { L: '장', W: '폭', H: '고' },
+      en: { L: 'L',  W: 'W',  H: 'H'  },
+      zh: { L: '长', W: '宽', H: '高' }
+    };
+    function axisLabel(code) { return (AXIS_LABELS[currentLang] || AXIS_LABELS.en)[code] || code; }
+    const OG_LOCALE = { ko: 'ko_KR', en: 'en_US', zh: 'zh_CN' };
+    const t = k => (translations[currentLang] || translations.en)[k];
+    const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+
+    // ---------- Crawlable content ----------
+    const SEO_CONTENT = {
+      en: {
+        introH: 'What is the Carton Box Designer?',
+        introP: 'The Carton Box Designer turns a product size into a finished carton specification. Enter the dimensions of one product (the inbox), and the tool works out the carton inner size, adds the flute allowance to get the outer size, draws the RSC dieline, and simulates how those cartons stack on a pallet. With Max Load enabled it searches every arrangement and picks the one that puts the most units on a single pallet without exceeding your carton weight limit. No install or sign-up, and the result can be saved as a PDF report or a dieline PDF.',
+        stdH: 'Flute Types and Board Allowance',
+        stdCols: ['Flute', 'Thickness', 'Typical use'],
+        stdRows: [
+          ['B-Flute', '3.0 mm', 'Retail boxes, light goods, good printability'],
+          ['A-Flute', '5.0 mm', 'General shipping cartons, good cushioning'],
+          ['AB-Flute (double wall)', '8.0 mm', 'Heavy or stacked loads, export cartons']
+        ],
+        faqH: 'Frequently Asked Questions (FAQ)',
+        faq: [
+          ['How are the carton inner and outer dimensions calculated?', 'The inner size is the product size multiplied by the arrangement plus a clearance gap on every side: inner length = product length × count + (count + 1) × gap. The outer size then adds the flute allowance, because corrugated board has real thickness and the box bulges slightly once assembled. A-flute adds roughly 6 mm to length and width and 9 mm to height.'],
+          ['What is the difference between A-flute, B-flute and AB-flute?', 'B-flute is about 3 mm thick with a fine profile — it prints well and suits retail packaging. A-flute is about 5 mm and gives more cushioning and stacking strength, so it is the usual choice for shipping cartons. AB-flute is a double wall around 8 mm, used for heavy contents or tall stacks where compression strength matters most.'],
+          ['How many products should go in one carton?', 'Two limits decide it: the carton weight and the pallet footprint. Manual handling guidance generally keeps a carton under about 15 kg. Beyond that, a carton that divides neatly into the pallet gives a better load — which is exactly what the Max Load option searches for, testing every arrangement that stays under your weight limit.'],
+          ['What is an RSC box?', 'RSC stands for Regular Slotted Container, the most common corrugated box. It is made from one blank: four side panels plus a glue tab, with flaps top and bottom. Each flap is half the box width, so the two outer flaps meet in the middle when closed. The dieline this tool draws is an RSC blank, with cut lines in red and crease (fold) lines in blue.'],
+          ['How does carton size change pallet loading efficiency?', 'A carton only loads well if its footprint divides into the pallet with little waste. On a 1,100 × 1,100 mm pallet, a carton of 550 × 366 mm tiles almost perfectly, while one a few millimetres larger can drop a whole row and lose 10% or more. Because the carton size follows from the arrangement, changing how many products go in each carton is usually the fastest way to raise the load.'],
+          ['Why does the clearance gap matter?', 'Products are never exactly their nominal size — labels, seams and slight bulging all add a little. Leaving a 2–3 mm gap around each product prevents the case where everything fits on paper but not on the packing line. The gap is included when the carton size is calculated, so it flows through to the outer size and the pallet load.']
+        ]
+      },
+      ko: {
+        introH: '카톤박스 설계기란?',
+        introP: '카톤박스 설계기는 제품 규격 하나로 완성된 카톤 사양을 만들어 주는 도구입니다. 제품(인박스) 크기를 입력하면 카톤 내경을 계산하고, 골 두께 공차를 더해 외경을 산출하며, RSC 칼선 전개도를 그리고, 그 카톤이 팔레트에 어떻게 쌓이는지 시뮬레이션합니다. 최대 적재를 켜면 카톤 최대 중량을 넘지 않는 범위에서 모든 배열을 탐색해 팔레트에 제품이 가장 많이 실리는 조합을 찾아냅니다. 설치나 회원가입 없이 쓸 수 있고, 결과는 PDF 보고서와 칼선 PDF로 저장할 수 있습니다.',
+        stdH: '골 종류와 두께 공차',
+        stdCols: ['골 종류', '두께', '주요 용도'],
+        stdRows: [
+          ['B골', '3.0 mm', '소매용 박스, 경량품, 인쇄 품질 우수'],
+          ['A골', '5.0 mm', '일반 배송 카톤, 완충성 우수'],
+          ['AB골 (양면 이중)', '8.0 mm', '중량물·고단 적재, 수출 카톤']
+        ],
+        faqH: '자주 묻는 질문 (FAQ)',
+        faq: [
+          ['카톤 내경과 외경은 어떻게 계산하나요?', '내경은 제품 크기에 배열 수를 곱하고 사방에 유격을 더해 구합니다. 즉 내경 장 = 제품 장 × 개수 + (개수 + 1) × 유격입니다. 외경은 여기에 골 두께 공차를 더합니다. 골판지는 실제 두께가 있고 조립 후 약간 부풀기 때문입니다. A골은 장·폭에 약 6mm, 고에 약 9mm가 더해집니다.'],
+          ['A골, B골, AB골은 어떻게 다른가요?', 'B골은 두께 약 3mm로 골이 촘촘해 인쇄가 잘 나오고 소매 포장에 적합합니다. A골은 약 5mm로 완충성과 압축 강도가 좋아 배송용 카톤에 주로 씁니다. AB골은 약 8mm의 양면 이중 골로, 내용물이 무겁거나 높게 쌓아 압축 강도가 중요한 경우에 사용합니다.'],
+          ['카톤 하나에 제품을 몇 개 넣어야 하나요?', '두 가지가 결정합니다. 카톤 중량과 팔레트 바닥면적입니다. 수작업 취급 기준으로 보통 카톤 하나를 15kg 이하로 유지합니다. 그 다음은 팔레트에 딱 떨어지게 나뉘는 카톤이 적재량이 좋습니다. 최대 적재 옵션이 바로 이것을 탐색합니다 — 중량 한도를 넘지 않는 모든 배열을 시도합니다.'],
+          ['RSC 박스가 무엇인가요?', 'RSC는 Regular Slotted Container의 약자로 가장 일반적인 골판지 박스입니다. 하나의 전개도로 만들어지며 4개의 측면 패널과 풀칠 탭, 그리고 위아래 플랩으로 구성됩니다. 각 플랩은 박스 폭의 절반이라 접으면 바깥쪽 두 플랩이 가운데에서 만납니다. 이 도구가 그리는 칼선이 RSC 전개도이며, 빨간색은 자르는 선, 파란색은 접는 선입니다.'],
+          ['카톤 사이즈가 팔레트 적재 효율에 어떤 영향을 주나요?', '카톤은 바닥면이 팔레트에 낭비 없이 나뉠 때만 잘 실립니다. 1,100 × 1,100mm 팔레트에서 550 × 366mm 카톤은 거의 완벽하게 채워지지만, 몇 mm만 커져도 한 줄이 통째로 빠져 10% 이상 손해가 날 수 있습니다. 카톤 사이즈는 배열에서 결정되므로, 카톤당 제품 수를 바꾸는 것이 적재량을 올리는 가장 빠른 방법입니다.'],
+          ['유격은 왜 필요한가요?', '제품은 표기 치수와 정확히 같지 않습니다. 라벨, 접합부, 약간의 팽창이 모두 조금씩 더해집니다. 제품마다 2~3mm 유격을 주면 계산상으로는 들어가는데 현장 포장 라인에서는 안 들어가는 상황을 막을 수 있습니다. 유격은 카톤 사이즈 계산에 포함되므로 외경과 팔레트 적재량까지 반영됩니다.']
+        ]
+      },
+      zh: {
+        introH: '什么是纸箱设计器？',
+        introP: '纸箱设计器可将产品尺寸直接转换为完整的纸箱规格。输入单个产品（内盒）的尺寸后，工具会计算纸箱内径，加上楞厚公差得出外径，绘制RSC刀模展开图，并仿真这些纸箱在托盘上的堆叠方式。开启最大装载后，将在不超过纸箱最大重量的前提下搜索所有排列，找出单个托盘装载数量最多的方案。无需安装或注册，结果可保存为PDF报告和刀模PDF。',
+        stdH: '楞型与厚度公差',
+        stdCols: ['楞型', '厚度', '主要用途'],
+        stdRows: [
+          ['B楞', '3.0 mm', '零售包装盒、轻货、印刷效果好'],
+          ['A楞', '5.0 mm', '一般运输纸箱、缓冲性好'],
+          ['AB楞（双瓦楞）', '8.0 mm', '重物或高层堆叠、出口纸箱']
+        ],
+        faqH: '常见问题 (FAQ)',
+        faq: [
+          ['纸箱的内径和外径是如何计算的？', '内径为产品尺寸乘以排列数量，再加上四周的间隙：内径长 = 产品长 × 数量 +（数量 + 1）× 间隙。外径则在此基础上加上楞厚公差，因为瓦楞纸板有实际厚度，且组装后会略微膨胀。A楞在长宽各增加约6mm，高度增加约9mm。',],
+          ['A楞、B楞与AB楞有何区别？', 'B楞厚约3mm，楞型细密，印刷效果好，适合零售包装。A楞厚约5mm，缓冲性与抗压强度更好，是运输纸箱的常用选择。AB楞为约8mm的双瓦楞，适用于内容物较重或堆叠较高、对抗压强度要求最高的场合。'],
+          ['一个纸箱应该装多少产品？', '由两个条件决定：纸箱重量与托盘底面积。按人工搬运标准，通常将单箱控制在15kg以内。其次，能被托盘整齐分割的纸箱装载效果更好——这正是最大装载选项所搜索的，它会尝试所有不超过重量限额的排列。'],
+          ['什么是RSC纸箱？', 'RSC是Regular Slotted Container的缩写，是最常见的瓦楞纸箱。它由一张展开纸板制成：四个侧面板加一个粘合舌，上下各有摇盖。每个摇盖为箱宽的一半，因此闭合时外侧两个摇盖在中间相接。本工具绘制的刀模即为RSC展开图，红色为裁切线，蓝色为折线。'],
+          ['纸箱尺寸如何影响托盘装载效率？', '只有当纸箱底面能被托盘几乎无浪费地分割时，装载效果才好。在1,100 × 1,100mm托盘上，550 × 366mm的纸箱几乎可以完美铺满，而仅大几毫米就可能整整少放一排，损失10%以上。由于纸箱尺寸由排列决定，改变每箱装入的产品数量通常是提升装载量最快的方法。'],
+          ['为什么需要设置间隙？', '产品的实际尺寸与标称值总有差异——标签、接缝和轻微膨胀都会占用空间。为每个产品预留2~3mm间隙，可以避免“理论上放得下、包装线上却放不进去”的情况。间隙会计入纸箱尺寸计算，因此会一直影响到外径与托盘装载量。']
+        ]
+      }
+    };
+
+    function renderSeoContent() {
+      const c = SEO_CONTENT[currentLang] || SEO_CONTENT.en;
+      const esc = s => String(s).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+      $('seoIntroH').textContent = c.introH;
+      $('seoIntroP').textContent = c.introP;
+      $('seoStdH').textContent = c.stdH;
+      $('seoStdTable').innerHTML =
+        `<thead><tr>${c.stdCols.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>` +
+        `<tbody>${c.stdRows.map(r => `<tr>${r.map(d => `<td>${esc(d)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      $('seoFaqH').textContent = c.faqH;
+      $('seoFaqList').innerHTML = c.faq.map(([q, a], i) =>
+        `<details${i === 0 ? ' open' : ''}><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
+    }
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      $('btnLang' + lang.charAt(0).toUpperCase() + lang.slice(1)).classList.add('active');
+      document.documentElement.lang = lang;
+
+      $('seoTitle').textContent = t('seoTitle');
+      $('seoDesc').setAttribute('content', t('seoDesc'));
+      $('ogTitle').setAttribute('content', t('seoTitle'));
+      $('ogDesc').setAttribute('content', t('seoDesc'));
+      $('twTitle').setAttribute('content', t('seoTitle'));
+      $('twDesc').setAttribute('content', t('seoDesc'));
+      $('ogLocale').setAttribute('content', OG_LOCALE[lang] || 'en_US');
+      renderSeoContent();
+
+      // plain-text labels
+      ['txtHeaderBrand','txtFormTitle','txtFormSub','txtGrpUnits','lblLenUnit','lblWeightUnit','txtGrpProduct','lblInboxDims','lblInWeight','lblGap',
+       'txtGrpArrange','hintAutoArrange','lblSingleLayer','hintSingleLayer','lblArrange','txtGrpMaterial',
+       'lblFlute','optFluteA','optFluteB','optFluteAB','lblMaxCartonWeight','txtGrpPallet','lblPalletType',
+       'optPalletT11','optPalletEuro','optPalletUS','optPalletISO','optPalletAus','optPalletCustom','lblPalletDims','lblMaxHeight','lblOptions','lblIncludeCheck',
+       'lblOrientFree','hintOrientFree','btnCalculate','txtLoadingMsg','txtDshTitle','lblKpiInner',
+       'lblKpiInnerSub','lblKpiOuter','lblKpiPerCarton','lblKpiTotalProducts','lblKpiCartons',
+       'lblKpiCartonWeight','txtTitle3D','txtLegHor','txtLegVer','txtLegPal','txtTitleInbox','txtLegInbox',
+       'txtLegCarton','txtLegWall','txtTitleDieline','txtDielineBadge','txtLegCut','txtLegCrease','txtLegGlue',
+       'txtTitle2D','txtTitleSide','btnBackToInput','btnSavePdf','btnDielinePdf','txtFooterDesc'
+      ].forEach(id => { const el = $(id); if (el) el.textContent = t(id); });
+      $('lblAutoArrange').innerHTML = t('lblAutoArrange');   // contains <b>
+
+      const lenU = $('lenUnit').value;
+      ['L','W','H'].forEach(ax => {
+        $('tagIn' + ax).textContent = axisLabel(ax) + ' (' + lenU + ')';
+        $('tagPallet' + ax).textContent = ax + ' (' + lenU + ')';
+      });
+
+      // the axis labels live inside the SVGs, so the result must be redrawn
+      if (activeBestPack) calculateLayout();
+    }
+
+    // ---------- Units ----------
+    // Everything downstream computes in mm / kg; these factors convert the
+    // user's chosen unit into that base and back for display.
+    let prevLenUnit = 'mm', prevWeightUnit = 'kg';
+    function getLenFactor() {
+      const u = $('lenUnit').value;
+      if (u === 'cm') return 10;
+      if (u === 'inch') return 25.4;
+      return 1;
+    }
+    function getWeightFactor() { return $('weightUnit').value === 'lb' ? 0.45359237 : 1; }
+    // decimals per unit: 0.1 inch is 2.54 mm, so inch needs 2 places or the
+    // mm -> inch -> mm round trip visibly drifts (70 mm would come back as 71).
+    const lenDecimals = () => ({ mm: 0, cm: 1, inch: 2 })[$('lenUnit').value] ?? 0;
+    const fmtLen = v => { const d = lenDecimals(); return d === 0 ? Math.round(v) : parseFloat(v.toFixed(d)); };
+
+    const PALLET_SIZES = {
+      T11:  { L: 1100, W: 1100, H: 150 },
+      euro: { L: 1200, W: 800,  H: 144 },
+      us:   { L: 1219, W: 1016, H: 130 },
+      iso:  { L: 1200, W: 1000, H: 150 },
+      aus:  { L: 1165, W: 1165, H: 150 }
+    };
+
+    function applyPalletType() {
+      const v = $('palletType').value;
+      const custom = v === 'custom';
+      ['palletL', 'palletW', 'palletH'].forEach(id => $(id).disabled = !custom);
+      if (custom) return;
+      const f = getLenFactor(), d = lenDecimals(), s = PALLET_SIZES[v] || PALLET_SIZES.T11;
+      $('palletL').value = parseFloat((s.L / f).toFixed(d));
+      $('palletW').value = parseFloat((s.W / f).toFixed(d));
+      $('palletH').value = parseFloat((s.H / f).toFixed(d));
+    }
+
+    function changeUnits() {
+      const lenU = $('lenUnit').value, weightU = $('weightUnit').value;
+
+      if (lenU !== prevLenUnit) {
+        const from = prevLenUnit === 'cm' ? 10 : prevLenUnit === 'inch' ? 25.4 : 1;
+        const to   = lenU === 'cm' ? 10 : lenU === 'inch' ? 25.4 : 1;
+        const d = { mm: 0, cm: 1, inch: 2 }[lenU] ?? 0;
+        ['inL','inW','inH','gap','palletL','palletW','palletH','maxHeightInput'].forEach(id => {
+          const el = $(id), raw = parseFloat(el.value);
+          if (isNaN(raw)) return;
+          const target = raw * from / to;
+          el.value = d === 0 ? Math.round(target) : parseFloat(target.toFixed(d));
+        });
+        const sl = $('maxHeight');
+        if (lenU === 'cm')        { sl.min = 30;   sl.max = 300;  sl.step = 1; }
+        else if (lenU === 'inch') { sl.min = 12;   sl.max = 118;  sl.step = 0.5; }
+        else                      { sl.min = 300;  sl.max = 3000; sl.step = 10; }
+        sl.value = $('maxHeightInput').value;
+        $('maxHeightInput').min = sl.min; $('maxHeightInput').max = sl.max;
+        $('maxHeightInput').step = sl.step;
+        $('gap').step = lenU === 'mm' ? 0.5 : lenU === 'cm' ? 0.1 : 0.01;
+        ['inL','inW','inH'].forEach(id => $(id).step = lenU === 'mm' ? 1 : lenU === 'cm' ? 0.1 : 0.01);
+        prevLenUnit = lenU;
+      }
+
+      if (weightU !== prevWeightUnit) {
+        const from = prevWeightUnit === 'lb' ? 0.45359237 : 1;
+        const to   = weightU === 'lb' ? 0.45359237 : 1;
+        ['inWeight','maxCartonWeightInput'].forEach(id => {
+          const el = $(id), raw = parseFloat(el.value);
+          if (isNaN(raw) || el.value === '') return;
+          const target = raw * from / to;
+          el.value = parseFloat(target.toFixed(2));
+        });
+        const w = $('maxCartonWeight');
+        if (weightU === 'lb') { w.min = 2; w.max = 66; w.step = 0.5; }
+        else                  { w.min = 1; w.max = 30; w.step = 0.5; }
+        w.value = $('maxCartonWeightInput').value;
+        $('maxCartonWeightInput').min = w.min;
+        $('maxCartonWeightInput').max = w.max;
+        $('inWeight').step = weightU === 'lb' ? 0.01 : 0.01;
+        prevWeightUnit = weightU;
+      }
+
+      document.querySelectorAll('.unit-len').forEach(e => e.textContent = lenU);
+      document.querySelectorAll('.unit-weight').forEach(e => e.textContent = weightU);
+      ['L','W','H'].forEach(ax => {
+        $('tagIn' + ax).textContent = axisLabel(ax) + ' (' + lenU + ')';
+        $('tagPallet' + ax).textContent = ax + ' (' + lenU + ')';
+      });
+      if (activeBestPack) calculateLayout();
+    }
+
+    // ---------- Packing engine ----------
+    function fillGrid(rx, ry, rw, rh, a, b) {
+      if (rw <= 0 || rh <= 0) return { count: 0, rects: [] };
+      const optA = { nx: Math.floor(rw/a), ny: Math.floor(rh/b), w: a, h: b };
+      const optB = { nx: Math.floor(rw/b), ny: Math.floor(rh/a), w: b, h: a };
+      const opt = optA.nx*optA.ny >= optB.nx*optB.ny ? optA : optB;
+      const rects = [];
+      for (let i = 0; i < opt.nx; i++) for (let j = 0; j < opt.ny; j++)
+        rects.push({ x: rx + i*opt.w, y: ry + j*opt.h, w: opt.w, h: opt.h, rot: opt.w === b });
+      return { count: opt.nx*opt.ny, rects };
+    }
+    function gridForced(L, W, a, b) {
+      const nx = Math.floor(L/a), ny = Math.floor(W/b);
+      const rects = [];
+      for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) rects.push({ x: i*a, y: j*b, w: a, h: b, rot: false });
+      return { count: nx*ny, rects, pattern: 'grid' };
+    }
+    function pinwheel(L, W, a, b) {
+      if (a === b) return { count: -1, rects: [], pattern: 'pinwheel' };
+      let best = { count: -1, rects: [], pattern: 'pinwheel' };
+      const maxCols = Math.floor(L/a), maxRows = Math.floor(W/b);
+      for (let cols = 1; cols <= maxCols; cols++) {
+        for (let rows = 1; rows <= maxRows; rows++) {
+          const A = cols*a, B = rows*b;
+          if (A + B > L || A + B > W) continue;
+          const countH = cols*rows;
+          const colsV = Math.floor(B/b), rowsV = Math.floor(A/a);
+          const countV = colsV*rowsV;
+          const total = 2*countH + 2*countV;
+          if (total > best.count) {
+            const rects = [];
+            const sL = A + B;
+            const ox = Math.floor((L - sL)/2), oy = Math.floor((W - sL)/2);
+            for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++)
+              rects.push({ x: ox + i*a, y: oy + j*b, w: a, h: b, rot: false });
+            for (let i = 0; i < colsV; i++) for (let j = 0; j < rowsV; j++)
+              rects.push({ x: ox + A + i*b, y: oy + j*a, w: b, h: a, rot: true });
+            for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++)
+              rects.push({ x: ox + B + i*a, y: oy + A + j*b, w: a, h: b, rot: false });
+            for (let i = 0; i < colsV; i++) for (let j = 0; j < rowsV; j++)
+              rects.push({ x: ox + i*b, y: oy + B + j*a, w: b, h: a, rot: true });
+            best = { count: total, rects, pattern: 'pinwheel' };
+          }
+        }
+      }
+      return best;
+    }
+    function hybridPack(L, W, a, b) {
+      let best = { count: -1, rects: [], pattern: 'block' };
+      const variants = [[a, b], [b, a]];
+      for (const [p, q] of variants) {
+        const maxCols = Math.floor(L/p);
+        for (let cols = 1; cols < maxCols; cols++) {
+          const L1 = cols*p, L2 = L - L1;
+          const rowsLeft = Math.floor(W/q), leftCount = cols*rowsLeft;
+          const colsRight = Math.floor(L2/q), rowsRight = Math.floor(W/p);
+          const total = leftCount + colsRight*rowsRight;
+          if (total > best.count) {
+            const rects = [];
+            for (let i = 0; i < cols; i++) for (let j = 0; j < rowsLeft; j++)
+              rects.push({ x: i*p, y: j*q, w: p, h: q, rot: p === b });
+            for (let i = 0; i < colsRight; i++) for (let j = 0; j < rowsRight; j++)
+              rects.push({ x: L1 + i*q, y: j*p, w: q, h: p, rot: q === b });
+            best = { count: total, rects, pattern: 'block' };
+          }
+        }
+        const maxRows = Math.floor(W/q);
+        for (let rows = 1; rows < maxRows; rows++) {
+          const W1 = rows*q, W2 = W - W1;
+          const colsBottom = Math.floor(L/p), bottomCount = colsBottom*rows;
+          const rowsTop = Math.floor(W2/p), colsTop = Math.floor(L/q);
+          const total = bottomCount + colsTop*rowsTop;
+          if (total > best.count) {
+            const rects = [];
+            for (let i = 0; i < colsBottom; i++) for (let j = 0; j < rows; j++)
+              rects.push({ x: i*p, y: j*q, w: p, h: q, rot: p === b });
+            for (let i = 0; i < colsTop; i++) for (let j = 0; j < rowsTop; j++)
+              rects.push({ x: i*q, y: W1 + j*p, w: q, h: p, rot: q === b });
+            best = { count: total, rects, pattern: 'block' };
+          }
+        }
+      }
+      return best;
+    }
+    function bestPack(L, W, a, b) {
+      const candidates = [gridForced(L, W, a, b), gridForced(L, W, b, a), hybridPack(L, W, a, b), pinwheel(L, W, a, b)];
+      return candidates.reduce((best, c) => {
+        if (c.count > best.count) return c;
+        if (c.count === best.count) {
+          if (c.pattern === 'pinwheel' && best.pattern === 'block') return c;
+          if (best.pattern === 'grid') return best;
+        }
+        return best;
+      });
+    }
+
+    // ---------- Carton sizing ----------
+    const Flutes = {
+      A:  { key: 'A',  thickness: 5.0, addL: 6, addW: 6, addH: 9 },
+      B:  { key: 'B',  thickness: 3.0, addL: 3, addW: 3, addH: 5 },
+      AB: { key: 'AB', thickness: 8.0, addL: 9, addW: 9, addH: 14 }
+    };
+    const fluteName = k => t('optFlute' + k).split(' (')[0].split('（')[0];
+
+    function cartonFromArrangement(ax, ay, az, inL, inW, inH, gap, flute) {
+      const inner = {
+        L: Math.round(inL*ax + (ax + 1)*gap),
+        W: Math.round(inW*ay + (ay + 1)*gap),
+        H: Math.round(inH*az + (az + 1)*gap)
+      };
+      return { inner, outer: { L: inner.L + flute.addL, W: inner.W + flute.addW, H: inner.H + flute.addH } };
+    }
+
+    // With 방향 무관 on, try all 3 axes as the stacking height. With it off the
+    // carton must stay upright (H vertical); bestPack still swaps L/W in-plane.
+    function packCartonOnPallet(outer, palletL, palletW, availHeight, orientFree) {
+      const combos = orientFree ? [
+        { a: outer.L, b: outer.W, h: outer.H, la: 'L', lb: 'W', lh: 'H' },
+        { a: outer.L, b: outer.H, h: outer.W, la: 'L', lb: 'H', lh: 'W' },
+        { a: outer.W, b: outer.H, h: outer.L, la: 'W', lb: 'H', lh: 'L' }
+      ] : [
+        { a: outer.L, b: outer.W, h: outer.H, la: 'L', lb: 'W', lh: 'H' }
+      ];
+      let best = null;
+      for (const c of combos) {
+        const pack = bestPack(palletL, palletW, c.a, c.b);
+        if (pack.count <= 0) continue;
+        const layers = Math.max(Math.floor(availHeight/c.h), 0);
+        const total = pack.count*layers;
+        const cand = { ...pack, footprint: c, layers, total };
+        if (!best || total > best.total || (total === best.total && pack.count > best.count)) best = cand;
+      }
+      return best;
+    }
+
+    const ARR_CAP = 24;
+    function findBestArrangement(cfg) {
+      const { inL, inW, inH, gap, flute, palletL, palletW, availHeight,
+              inWeight, maxCartonW, singleLayer, orientFree } = cfg;
+      const palletMax = Math.max(palletL, palletW);
+      const limX = Math.min(ARR_CAP, Math.max(1, Math.floor((palletMax - flute.addL - gap)/(inL + gap))));
+      const limY = Math.min(ARR_CAP, Math.max(1, Math.floor((palletMax - flute.addW - gap)/(inW + gap))));
+      const limZ = singleLayer ? 1
+                 : Math.min(ARR_CAP, Math.max(1, Math.floor((availHeight - flute.addH - gap)/(inH + gap))));
+      let best = null;
+      for (let ax = 1; ax <= limX; ax++) for (let ay = 1; ay <= limY; ay++) for (let az = 1; az <= limZ; az++) {
+        const qty = ax*ay*az;
+        if (inWeight > 0 && maxCartonW > 0 && qty*inWeight > maxCartonW) continue;
+        const c = cartonFromArrangement(ax, ay, az, inL, inW, inH, gap, flute);
+        const pack = packCartonOnPallet(c.outer, palletL, palletW, availHeight, orientFree);
+        if (!pack || pack.total <= 0) continue;
+        const products = pack.total*qty;
+        if (!best || products > best.products ||
+            (products === best.products && pack.total < best.pack.total)) {
+          best = { ax, ay, az, qty, products, pack, inner: c.inner, outer: c.outer };
+        }
+      }
+      return best;
+    }
+
+    // ---------- State & steps ----------
+    let calculatedInner = { L: 0, W: 0, H: 0 };
+    let calculatedOuter = { L: 0, W: 0, H: 0 };
+    let activeBestPack = null;
+
+    function syncArrangeUI() {
+      const auto = $('autoArrange').checked, single = $('singleLayer').checked;
+      $('arrX').disabled = auto;
+      $('arrY').disabled = auto;
+      $('arrZ').disabled = auto || single;
+      if (single) $('arrZ').value = 1;
+    }
+
+    function triggerCalculation() {
+      const warn = $('warnBox');
+      warn.classList.remove('show');
+      const bad = ['inL','inW','inH','palletL','palletW'].some(id => (parseFloat($(id).value) || 0) <= 0);
+      if (bad) {
+        warn.textContent = t('warnInput');
+        warn.classList.add('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      $('stepInput').classList.add('hidden');
+      $('stepLoading').classList.remove('hidden');
+      setTimeout(() => {
+        const ok = calculateLayout();
+        $('stepLoading').classList.add('hidden');
+        if (ok) $('stepResult').classList.remove('hidden');
+        else $('stepInput').classList.remove('hidden');
+      }, 1200);
+    }
+
+    function resetCalculator() {
+      $('stepResult').classList.add('hidden');
+      $('stepInput').classList.remove('hidden');
+      activeBestPack = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function calculateLayout() {
+      // convert every input into the mm / kg base the engine works in
+      const lf = getLenFactor(), wf = getWeightFactor();
+      const lenU = $('lenUnit').value, weightU = $('weightUnit').value;
+      const inL = (parseFloat($('inL').value) || 0) * lf;
+      const inW = (parseFloat($('inW').value) || 0) * lf;
+      const inH = (parseFloat($('inH').value) || 0) * lf;
+      const gap = (parseFloat($('gap').value) || 0) * lf;
+      const flute = Flutes[$('fluteType').value];
+      const inWeight = (parseFloat($('inWeight').value) || 0) * wf;
+      const maxCartonW = (parseFloat($('maxCartonWeightInput').value) || 0) * wf;
+      const palletL = (parseFloat($('palletL').value) || 0) * lf;
+      const palletW = (parseFloat($('palletW').value) || 0) * lf;
+      const palletH = (parseFloat($('palletH').value) || 0) * lf;
+      const includePalletH = $('includePalletH').checked;
+      const warn = $('warnBox');
+      warn.classList.remove('show');
+
+      if (inL <= 0 || inW <= 0 || inH <= 0 || palletL <= 0 || palletW <= 0) {
+        warn.textContent = t('warnInput'); warn.classList.add('show'); return false;
+      }
+
+      const maxH = (parseFloat($('maxHeightInput').value) || 0) * lf;
+      const availHeight = includePalletH ? (maxH - palletH) : maxH;
+
+      const autoArrange = $('autoArrange').checked;
+      const singleLayer = $('singleLayer').checked;
+      const orientFree = $('orientFree').checked;
+
+      let arrX, arrY, arrZ, best;
+      if (autoArrange) {
+        const found = findBestArrangement({ inL, inW, inH, gap, flute, palletL, palletW,
+                                            availHeight, inWeight, maxCartonW, singleLayer, orientFree });
+        if (!found) {
+          warn.textContent = fill(t('warnNoArr'), { lim: $('maxCartonWeightInput').value + weightU });
+          warn.classList.add('show');
+          return false;
+        }
+        arrX = found.ax; arrY = found.ay; arrZ = found.az;
+        best = found.pack;
+        calculatedInner = found.inner;
+        calculatedOuter = found.outer;
+        $('arrX').value = arrX; $('arrY').value = arrY; $('arrZ').value = arrZ;
+      } else {
+        arrX = parseInt($('arrX').value) || 1;
+        arrY = parseInt($('arrY').value) || 1;
+        arrZ = singleLayer ? 1 : (parseInt($('arrZ').value) || 1);
+        if (singleLayer) $('arrZ').value = 1;
+        const c = cartonFromArrangement(arrX, arrY, arrZ, inL, inW, inH, gap, flute);
+        calculatedInner = c.inner; calculatedOuter = c.outer;
+        best = packCartonOnPallet(calculatedOuter, palletL, palletW, availHeight, orientFree);
+      }
+
+      const inQty = arrX*arrY*arrZ;
+      const cartonWeight = inQty*inWeight;
+      $('arrHint').textContent = fill(t('arrHint'), { qty: inQty, x: arrX, y: arrY, z: arrZ })
+        + (autoArrange ? t('arrHintAuto') : '');
+
+      // results are held in mm/kg; render them back in the user's unit
+      const dL = v => fmtLen(v / lf);
+      $('kpiInnerSize').textContent = `${dL(calculatedInner.L)} × ${dL(calculatedInner.W)} × ${dL(calculatedInner.H)}`;
+      $('kpiOuterSize').textContent = `${dL(calculatedOuter.L)} × ${dL(calculatedOuter.W)} × ${dL(calculatedOuter.H)}`;
+      $('lblKpiInnerSub').textContent = `${axisLabel('L')} × ${axisLabel('W')} × ${axisLabel('H')} (${lenU})`;
+      $('kpiFluteThickness').textContent = fill(t('fluteApplied'), { name: fluteName(flute.key), t: flute.thickness.toFixed(1) });
+      $('kpiPerCarton').innerHTML = fmt(inQty) + ` <span>${t('perCartonUnit')}</span>`;
+      $('kpiArrangement').textContent = `${arrX} × ${arrY} × ${arrZ}`;
+
+      const over = inWeight > 0 && maxCartonW > 0 && cartonWeight > maxCartonW + 1e-9;
+      const dispCartonW = Math.round(cartonWeight / wf * 100) / 100;
+      const dispLimit = Math.round(maxCartonW / wf * 100) / 100;
+      const dispUnitW = Math.round(inWeight / wf * 1000) / 1000;
+      if (inWeight > 0) {
+        $('kpiCartonWeight').innerHTML = fmt(dispCartonW) +
+          ` <span style="color:${over ? 'var(--danger)' : 'var(--ink-dim)'}">${weightU}</span>`;
+        $('kpiCartonWeightSub').textContent = fill(t('cartonWeightSub'), { qty: inQty, w: dispUnitW + weightU })
+          + (maxCartonW > 0 ? fill(t('cartonWeightLimit'), { lim: dispLimit + weightU, pct: (cartonWeight/maxCartonW*100).toFixed(0) }) : '');
+      } else {
+        $('kpiCartonWeight').innerHTML = '—';
+        $('kpiCartonWeightSub').textContent = t('cartonWeightNone');
+      }
+      if (over && !autoArrange) {
+        warn.textContent = fill(t('warnOverWeight'), { w: dispCartonW + weightU, lim: dispLimit + weightU });
+        warn.classList.add('show');
+      }
+
+      activeBestPack = best;
+      if (!best || best.total <= 0) {
+        warn.textContent = t('warnNoFit'); warn.classList.add('show');
+        ['kpiTotalProducts','kpiTotalCartons','kpiPatternLayers'].forEach(id => $(id).innerHTML = '—');
+        $('topSvg').innerHTML = ''; $('sideSvg').innerHTML = ''; $('isoSvg').innerHTML = ''; $('orientStrip').innerHTML = '';
+        // the carton itself is still valid even if it won't fit the pallet
+        drawDieline(calculatedOuter.L, calculatedOuter.W, calculatedOuter.H, lf, lenU);
+        drawInboxLayout(calculatedInner, calculatedOuter, flute, inL, inW, inH, gap, arrX, arrY, arrZ);
+        return false;
+      }
+
+      const totalProducts = best.total*inQty;
+      const boxArea = best.rects.reduce((s, r) => s + r.w*r.h, 0);
+      const occupancy = Math.min(boxArea/(palletL*palletW)*100, 100);
+      const palletWeight = best.total*cartonWeight;
+
+      $('kpiTotalProducts').innerHTML = fmt(totalProducts) + ' <span>EA</span>';
+      $('kpiInboxRatio').textContent = fill(t('inboxRatio'), { qty: inQty, n: fmt(best.total) });
+      $('kpiTotalCartons').innerHTML = fmt(best.total) + ' <span>Box</span>';
+      $('kpiPatternLayers').textContent = fill(t('patternLayers'), { c: best.count, l: best.layers, occ: occupancy.toFixed(1) })
+        + (inWeight > 0 ? fill(t('patternLayersW'), { w: fmt(Math.round(palletWeight / wf)) + weightU }) : '');
+      $('patternBadge').textContent = best.pattern.toUpperCase();
+
+      $('orientStrip').innerHTML =
+        `<span class="oi">${axisLabel(best.footprint.la)} <b>${fmt(dL(best.footprint.a))}${lenU}</b> → X</span>` +
+        `<span class="oi">${axisLabel(best.footprint.lb)} <b>${fmt(dL(best.footprint.b))}${lenU}</b> → Y</span>` +
+        `<span class="oi">${axisLabel(best.footprint.lh)} <b>${fmt(dL(best.footprint.h))}${lenU}</b> → Z</span>` +
+        `<span class="oi"><b>${fmt(best.count)}</b> × ${best.layers} = <b>${fmt(best.total)}</b></span>`;
+
+      drawTop(palletL, palletW, best, lf, lenU);
+      draw3D(palletL, palletW, palletH, best, lf, lenU);
+      drawSide(palletH, best, maxH, includePalletH, lf, lenU);
+      drawDieline(calculatedOuter.L, calculatedOuter.W, calculatedOuter.H, lf, lenU);
+      drawInboxLayout(calculatedInner, calculatedOuter, flute, inL, inW, inH, gap, arrX, arrY, arrZ);
+      return true;
+    }
+
+    // ---------- Isometric helpers ----------
+    const AZ = Math.PI/4, EL = Math.PI/4;
+    const cA = Math.cos(AZ), sA = Math.sin(AZ), cE = Math.cos(EL), sE = Math.sin(EL);
+    function iso(x, y, z) { return { sx: (x - z)*cA, sy: (x + z)*sA*sE - y*cE }; }
+
+    function draw3D(L, W, palletH, best, lf, lenU) {
+      const svg = $('isoSvg');
+      const viewW = 860, viewH = 560, pad = 40;
+      const dv = v => fmt(fmtLen(v / lf)) + lenU;
+      const boxH = best.footprint.h;
+      const totalH = palletH + boxH*best.layers;
+      const dimMargin = Math.max(L, W)*0.09*1.9;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const xx of [0, L + dimMargin]) for (const yy of [0, totalH]) for (const zz of [0, W + dimMargin]) {
+        const p = iso(xx, yy, zz);
+        minX = Math.min(minX, p.sx); maxX = Math.max(maxX, p.sx);
+        minY = Math.min(minY, p.sy); maxY = Math.max(maxY, p.sy);
+      }
+      const scale = Math.min((viewW - pad*2)/(maxX - minX), (viewH - pad*2)/(maxY - minY));
+      const originX = pad - minX*scale + ((viewW - pad*2) - (maxX - minX)*scale)/2;
+      const originY = pad - minY*scale + ((viewH - pad*2) - (maxY - minY)*scale)/2;
+      function P(x, y, z) { const p = iso(x, y, z); return { x: originX + p.sx*scale, y: originY + p.sy*scale }; }
+      function poly(pts) { return pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '); }
+      function cuboid(x0, y0, z0, w, h, d, tf, rf, ff, st) {
+        const v = {
+          '010': P(x0, y0+h, z0), '110': P(x0+w, y0+h, z0), '111': P(x0+w, y0+h, z0+d), '011': P(x0, y0+h, z0+d),
+          '100': P(x0+w, y0, z0), '101': P(x0+w, y0, z0+d), '001': P(x0, y0, z0+d)
+        };
+        return {
+          depth: (x0 + w/2) + (z0 + d/2) + y0*1.6,
+          svg: `<polygon points="${poly([v['010'],v['110'],v['111'],v['011']])}" fill="${tf}" stroke="${st}" stroke-width="0.6"/>`
+             + `<polygon points="${poly([v['100'],v['110'],v['111'],v['101']])}" fill="${rf}" stroke="${st}" stroke-width="0.6"/>`
+             + `<polygon points="${poly([v['001'],v['101'],v['111'],v['011']])}" fill="${ff}" stroke="${st}" stroke-width="0.6"/>`
+        };
+      }
+      const items = [];
+      const pal = cuboid(0, 0, 0, L, palletH, W, '#8B5A2B', '#6F4721', '#5C3A1A', '#A06E3F');
+      pal.depth = -999999; items.push(pal);
+      for (let li = 0; li < best.layers; li++) {
+        const y0 = palletH + li*boxH;
+        for (const r of best.rects) {
+          const rot = r.rot;
+          items.push(cuboid(r.x, y0, r.y, r.w, boxH, r.h,
+            rot ? '#B88650' : '#D2A06A', rot ? '#92602A' : '#AC7A44',
+            rot ? '#6B3903' : '#85531D', rot ? '#DEAC76' : '#F8C690'));
+        }
+      }
+      items.sort((a, b) => a.depth - b.depth);
+      let s = items.map(i => i.svg).join('');
+      const gc = P(L/2, 0, W/2);
+      s = `<ellipse cx="${gc.x}" cy="${gc.y+4}" rx="${L*scale*0.55}" ry="${L*scale*0.18}" fill="#000" opacity="0.12"/>` + s;
+
+      if (best.rects.length) {
+        const topIdx = best.layers - 1, topY0 = palletH + topIdx*boxH;
+        const r0 = best.rects.reduce((f, r) => (r.x+r.w)+(r.y+r.h) > (f.x+f.w)+(f.y+f.h) ? r : f, best.rects[0]);
+        const labelX = r0.rot ? best.footprint.lb : best.footprint.la;
+        const valX = r0.rot ? best.footprint.b : best.footprint.a;
+        const labelZ = r0.rot ? best.footprint.la : best.footprint.lb;
+        const valZ = r0.rot ? best.footprint.a : best.footprint.b;
+        const frontX = r0.x + r0.w, frontZ = r0.y + r0.h, topOfBox = topY0 + boxH;
+        const corner = P(frontX, topOfBox, frontZ);
+        s += drawDimLabels(corner, [
+          { c2: P(r0.x, topOfBox, frontZ), color: '#D97706', text: `${axisLabel(labelX)} ${dv(valX)}` },
+          { c2: P(frontX, topOfBox, r0.y), color: '#0284C7', text: `${axisLabel(labelZ)} ${dv(valZ)}` },
+          { c2: P(frontX, topY0, frontZ), color: '#10B981', text: `${axisLabel(best.footprint.lh)} ${dv(boxH)}` }
+        ], P(r0.x + r0.w/2, topY0 + boxH/2, r0.y + r0.h/2), viewW, viewH);
+      }
+      svg.innerHTML = s;
+    }
+
+    // All three dimension arrows leave the same corner, so on small cartons the
+    // chips land on top of each other. Park each one out along its own arrow,
+    // then push any overlapping pair apart before drawing.
+    function drawDimLabels(corner, specs, boxCenter, viewW, viewH) {
+      const LBL_H = 18;
+      const chipWidth = s => {
+        const units = [...s].reduce((n, ch) => n + (/[ㄱ-힝㐀-鿿]/.test(ch) ? 2 : 1), 0);
+        return Math.max(50, units*6.1 + 14);
+      };
+      for (const d of specs) {
+        d.w = chipWidth(d.text);
+        const dx = d.c2.x - corner.x, dy = d.c2.y - corner.y;
+        const len = Math.hypot(dx, dy) || 1;
+        d.ux = dx/len; d.uy = dy/len;
+        let px = -d.uy, py = d.ux;
+        const mx = corner.x + d.ux*len/2, my = corner.y + d.uy*len/2;
+        if (Math.hypot(mx + px - boxCenter.x, my + py - boxCenter.y) <
+            Math.hypot(mx - px - boxCenter.x, my - py - boxCenter.y)) { px = -px; py = -py; }
+        const tt = Math.max(len*0.55, 50);
+        d.lx = corner.x + d.ux*Math.min(tt, len);
+        d.ly = corner.y + d.uy*Math.min(tt, len);
+        d.ox = corner.x + d.ux*tt + px*14;
+        d.oy = corner.y + d.uy*tt + py*14;
+      }
+      for (let iter = 0; iter < 80; iter++) {
+        let moved = false;
+        for (let i = 0; i < specs.length; i++) for (let j = i+1; j < specs.length; j++) {
+          const A = specs[i], B = specs[j];
+          let dx = B.ox - A.ox, dy = B.oy - A.oy;
+          const penX = (A.w/2 + B.w/2 + 6) - Math.abs(dx);
+          const penY = (LBL_H + 6) - Math.abs(dy);
+          if (penX <= 0 || penY <= 0) continue;
+          moved = true;
+          if (penY <= penX) { if (dy === 0) dy = 1; const p = Math.sign(dy)*penY/2; A.oy -= p; B.oy += p; }
+          else { if (dx === 0) dx = 1; const p = Math.sign(dx)*penX/2; A.ox -= p; B.ox += p; }
+        }
+        if (!moved) break;
+      }
+      let out = '';
+      for (const d of specs) {
+        d.ox = Math.max(d.w/2 + 2, Math.min(viewW - d.w/2 - 2, d.ox));
+        d.oy = Math.max(LBL_H/2 + 2, Math.min(viewH - LBL_H/2 - 2, d.oy));
+        const h1 = { x: d.c2.x - d.ux*8 - d.uy*4, y: d.c2.y - d.uy*8 + d.ux*4 };
+        const h2 = { x: d.c2.x - d.ux*8 + d.uy*4, y: d.c2.y - d.uy*8 - d.ux*4 };
+        out += `<line x1="${corner.x}" y1="${corner.y}" x2="${d.c2.x}" y2="${d.c2.y}" stroke="${d.color}" stroke-width="2.5" stroke-linecap="round"/>`
+             + `<polygon points="${d.c2.x},${d.c2.y} ${h1.x},${h1.y} ${h2.x},${h2.y}" fill="${d.color}"/>`
+             + `<line x1="${d.lx}" y1="${d.ly}" x2="${d.ox}" y2="${d.oy}" stroke="${d.color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.9"/>`
+             + `<rect x="${d.ox - d.w/2}" y="${d.oy - LBL_H/2}" width="${d.w}" height="${LBL_H}" fill="#FFFFFF" stroke="${d.color}" stroke-width="1.5" rx="3"/>`
+             + `<text x="${d.ox}" y="${d.oy + 4}" fill="#0F172A" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle" font-weight="700">${d.text}</text>`;
+      }
+      return out;
+    }
+
+    // ---------- Carton content view (open RSC with inboxes loaded) ----------
+    const INBOX_DRAW_CAP = 1200;
+    function drawInboxLayout(inner, outer, flute, inL, inW, inH, gap, arrX, arrY, arrZ) {
+      const svg = $('inboxSvg');
+      const viewW = 860, viewH = 440, pad = 30;
+      const L = outer.L, W = outer.W, H = outer.H;
+      const wx = Math.max(1, (outer.L - inner.L)/2);
+      const wz = Math.max(1, (outer.W - inner.W)/2);
+      const wy = Math.max(1, (outer.H - inner.H)/2);
+      const fd = W/2, th = Math.max(1.5, flute.thickness);
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const xx of [-fd, L + fd]) for (const yy of [0, H]) for (const zz of [-fd, W + fd]) {
+        const p = iso(xx, yy, zz);
+        minX = Math.min(minX, p.sx); maxX = Math.max(maxX, p.sx);
+        minY = Math.min(minY, p.sy); maxY = Math.max(maxY, p.sy);
+      }
+      const scale = Math.min((viewW - pad*2)/(maxX - minX), (viewH - pad*2)/(maxY - minY));
+      const originX = pad - minX*scale + ((viewW - pad*2) - (maxX - minX)*scale)/2;
+      const originY = pad - minY*scale + ((viewH - pad*2) - (maxY - minY)*scale)/2;
+      function P(x, y, z) { const p = iso(x, y, z); return { x: originX + p.sx*scale, y: originY + p.sy*scale }; }
+      function poly(pts) { return pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '); }
+      function box(x0, y0, z0, w, h, d, tf, rf, ff, st, op) {
+        const v = {
+          '010': P(x0, y0+h, z0), '110': P(x0+w, y0+h, z0), '111': P(x0+w, y0+h, z0+d), '011': P(x0, y0+h, z0+d),
+          '100': P(x0+w, y0, z0), '101': P(x0+w, y0, z0+d), '001': P(x0, y0, z0+d)
+        };
+        const o = op === undefined ? 1 : op;
+        return {
+          depth: (x0 + w/2) + (z0 + d/2) + y0*1.6,
+          svg: `<polygon points="${poly([v['010'],v['110'],v['111'],v['011']])}" fill="${tf}" stroke="${st}" stroke-width="0.7" fill-opacity="${o}"/>`
+             + `<polygon points="${poly([v['100'],v['110'],v['111'],v['101']])}" fill="${rf}" stroke="${st}" stroke-width="0.7" fill-opacity="${o}"/>`
+             + `<polygon points="${poly([v['001'],v['101'],v['111'],v['011']])}" fill="${ff}" stroke="${st}" stroke-width="0.7" fill-opacity="${o}"/>`
+        };
+      }
+      const CT='#D2A06A', CR='#AC7A44', CF='#85531D', CS='#F8C690';
+      const IT='#E8C49B', IR='#C9975A', IF='#A9762F', IS='#8A5A22';
+
+      // Explicit draw order — a depth sort can't resolve the translucent near
+      // walls, so they and the near flaps are painted last on purpose.
+      let s = '';
+      s += box(0, H, -fd, L, th, fd, CR, CF, CF, CS).svg;
+      s += box(-fd, H, 0, fd, th, W, CR, CF, CF, CS).svg;
+      s += box(0, 0, 0, L, wy, W, CR, CF, CF, CS).svg;
+      s += box(0, 0, 0, wx, H, W, CT, CR, CF, CS).svg;
+      s += box(0, 0, 0, L, H, wz, CT, CR, CF, CS).svg;
+
+      const qty = arrX*arrY*arrZ;
+      if (qty <= INBOX_DRAW_CAP) {
+        const ib = [];
+        for (let k = 0; k < arrZ; k++) for (let j = 0; j < arrY; j++) for (let i = 0; i < arrX; i++)
+          ib.push(box(wx + gap + i*(inL+gap), wy + gap + k*(inH+gap), wz + gap + j*(inW+gap),
+                      inL, inH, inW, IT, IR, IF, IS));
+        ib.sort((a, b) => a.depth - b.depth);
+        s += ib.map(b => b.svg).join('');
+      }
+      s += box(L - wx, 0, 0, wx, H, W, CT, CR, CF, CS, 0.28).svg;
+      s += box(0, 0, W - wz, L, H, wz, CT, CR, CF, CS, 0.28).svg;
+      s += box(L, H, 0, fd, th, W, CR, CF, CF, CS).svg;
+      s += box(0, H, W, L, th, fd, CR, CF, CF, CS).svg;
+
+      svg.innerHTML = s;
+      $('inboxBadge').textContent = `${arrX} × ${arrY} × ${arrZ} = ${fmt(qty)} EA`;
+    }
+
+    // ---------- Top / side views ----------
+    function dimLine(x1, y1, x2, y2, label, dir) {
+      const mid = dir === 'h' ? { x: (x1+x2)/2, y: y1-6 } : { x: x1-24, y: (y1+y2)/2 };
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#94A3B8" stroke-width="1"/>`
+           + `<line x1="${x1}" y1="${y1-4}" x2="${x1}" y2="${y1+4}" stroke="#94A3B8" stroke-width="1"/>`
+           + `<line x1="${x2}" y1="${y2-4}" x2="${x2}" y2="${y2+4}" stroke="#94A3B8" stroke-width="1"/>`
+           + `<text x="${mid.x}" y="${mid.y}" fill="#94A3B8" font-family="IBM Plex Mono, monospace" font-size="10.5" text-anchor="middle" transform="${dir === 'v' ? `rotate(-90 ${mid.x} ${mid.y})` : ''}">${label}</text>`;
+    }
+    function drawTop(L, W, best, lf, lenU) {
+      const svg = $('topSvg'), pad = 46, size = 480;
+      const dv = v => fmt(fmtLen(v / lf)) + ' ' + lenU;
+      const scale = (size - pad*2)/Math.max(L, W);
+      const offX = pad + (Math.max(L, W) - L)*scale/2;
+      const offY = pad + (Math.max(L, W) - W)*scale/2;
+      let s = `<rect x="${offX}" y="${offY}" width="${L*scale}" height="${W*scale}" fill="none" stroke="#D97706" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+      for (const r of best.rects) {
+        s += `<rect x="${offX + r.x*scale}" y="${offY + r.y*scale}" width="${r.w*scale}" height="${r.h*scale}" fill="${r.rot ? 'var(--box-b)' : 'var(--box-a)'}" stroke="${r.rot ? 'var(--box-b-line)' : 'var(--box-a-line)'}" stroke-width="1" rx="1"/>`;
+      }
+      s += dimLine(offX, offY-14, offX + L*scale, offY-14, dv(L), 'h');
+      s += dimLine(offX-14, offY, offX-14, offY + W*scale, dv(W), 'v');
+      svg.innerHTML = s;
+    }
+    function drawSide(palletH, best, maxH, includePalletH, lf, lenU) {
+      const svg = $('sideSvg'), viewW = 240, viewH = 480;
+      const dv = v => fmt(fmtLen(v / lf)) + lenU;
+      const padBottom = 30, padTop = 24, padSide = 60;
+      const boxH = best.footprint.h;
+      const totalH = boxH*best.layers + palletH;
+      const refHeight = Math.max(maxH, totalH);
+      const scale = (viewH - padBottom - padTop)/refHeight;
+      const baseY = viewH - padBottom;
+      let s = `<line x1="${padSide-20}" y1="${baseY}" x2="${viewW-10}" y2="${baseY}" stroke="#CBD5E1" stroke-width="1"/>`;
+      const plH = palletH*scale;
+      s += `<rect x="${padSide}" y="${baseY-plH}" width="90" height="${plH}" fill="#8B5A2B" stroke="#6F4721" stroke-width="1"/>`;
+      s += `<text x="${padSide+45}" y="${baseY-plH/2+4}" fill="#FFFFFF" font-family="IBM Plex Mono" font-size="9" text-anchor="middle">${t('txtLegPal')}</text>`;
+      let y = baseY - plH;
+      const lH = boxH*scale;
+      for (let i = 0; i < best.layers; i++) {
+        y -= lH;
+        s += `<rect x="${padSide}" y="${y}" width="90" height="${Math.max(lH-1.5, 1)}" fill="${i%2 === 0 ? 'var(--box-a)' : 'var(--box-b)'}" stroke="${i%2 === 0 ? 'var(--box-a-line)' : 'var(--box-b-line)'}" stroke-width="0.75"/>`;
+      }
+      const limitTop = includePalletH ? maxH : maxH + palletH;
+      const limY = baseY - limitTop*scale;
+      s += `<line x1="${padSide-14}" y1="${limY}" x2="${viewW-10}" y2="${limY}" stroke="#EF4444" stroke-width="1.25" stroke-dasharray="5 3"/>`;
+      s += `<text x="${viewW-12}" y="${limY-5}" fill="#EF4444" font-family="IBM Plex Mono" font-size="9" text-anchor="end">LIMIT ${dv(maxH)}</text>`;
+      s += `<text x="${padSide+45}" y="${baseY+16}" fill="#64748B" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">${dv(totalH)}</text>`;
+      svg.innerHTML = s;
+    }
+
+    // ---------- Dieline (RSC A1) ----------
+    function drawDieline(L, W, H, lf, lenU) {
+      const dv = v => fmt(fmtLen(v / lf));
+      const canvas = $('dielineCanvas'), ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const g = 30, totalW = g + L + W + L + W, totalH = H + W;
+      const pad = 45, labelGutter = 48;   // gutter keeps the H label from clipping
+      const scale = Math.min((canvas.width - pad*2 - labelGutter)/totalW, (canvas.height - pad*2)/totalH);
+      const startX = pad + (canvas.width - pad*2 - labelGutter - totalW*scale)/2;
+      const startY = pad + (canvas.height - pad*2 - totalH*scale)/2;
+      const sG = g*scale, sL = L*scale, sW = W*scale, sH = H*scale, sF = (W/2)*scale;
+      ctx.lineWidth = 1;
+      function line(x1, y1, x2, y2, dashed) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        if (dashed) { ctx.setLineDash([4, 4]); ctx.strokeStyle = '#0284C7'; }
+        else { ctx.setLineDash([]); ctx.strokeStyle = '#EF4444'; }
+        ctx.stroke();
+      }
+      const yFlapTop = startY, yH1 = startY + sF, yH2 = startY + sF + sH, yFlapBot = startY + sF + sH + sF;
+      const xG = startX, xL1 = startX + sG, xW1 = xL1 + sL, xL2 = xW1 + sW, xW2 = xL2 + sL, xEnd = xW2 + sW;
+
+      line(xL1, yH1, xEnd, yH1, true); line(xL1, yH2, xEnd, yH2, true);
+      line(xL1, yH1, xL1, yH2, true); line(xW1, yH1, xW1, yH2, true);
+      line(xL2, yH1, xL2, yH2, true); line(xW2, yH1, xW2, yH2, true);
+
+      ctx.fillStyle = 'rgba(217, 119, 6, 0.08)';
+      ctx.beginPath();
+      ctx.moveTo(xG, yH1 + 5*scale); ctx.lineTo(xL1, yH1);
+      ctx.lineTo(xL1, yH2); ctx.lineTo(xG, yH2 - 5*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(xG, yH1 + 5*scale); ctx.lineTo(xL1, yH1);
+      ctx.moveTo(xL1, yH2); ctx.lineTo(xG, yH2 - 5*scale); ctx.lineTo(xG, yH1 + 5*scale);
+      ctx.setLineDash([]); ctx.strokeStyle = '#EF4444'; ctx.stroke();
+
+      line(xL1, yFlapTop, xEnd, yFlapTop, false);
+      line(xL1, yFlapBot, xEnd, yFlapBot, false);
+      [xL1, xW1, xL2, xW2, xEnd].forEach(x => {
+        line(x, yH1, x, yFlapTop, false);
+        line(x, yH2, x, yFlapBot, false);
+      });
+      // right edge of the body panel — the free edge that meets the glue tab
+      line(xEnd, yH1, xEnd, yH2, false);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = '10px IBM Plex Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.setLineDash([]);
+      ctx.fillText(`${axisLabel('L')}: ${dv(L)}`, xL1 + sL/2, yH1 + sH/2 + 3);
+      ctx.fillText(`${axisLabel('W')}: ${dv(W)}`, xW1 + sW/2, yH1 + sH/2 + 3);
+      ctx.fillText(`${axisLabel('H')}: ${dv(H)}`, xEnd + 20, yH1 + sH/2 + 3);
+      ctx.fillText(`${axisLabel('W')}/2: ${dv(W/2)}`, xL1 + sL/2, yH1 - 10);
+    }
+
+    function exportDielinePDF() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2970; canvas.height = 2100;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const L = calculatedOuter.L, W = calculatedOuter.W, H = calculatedOuter.H;
+      const flute = Flutes[$('fluteType').value];
+      const lf = getLenFactor(), lenU = $('lenUnit').value;
+      const dv = v => fmt(fmtLen(v / lf));
+
+      ctx.fillStyle = '#0F172A';
+      ctx.font = 'bold 48px "Malgun Gothic", "Outfit", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(t('dielineTitle'), 150, 120);
+      ctx.fillStyle = '#64748B';
+      ctx.font = '32px "Malgun Gothic", "Outfit", sans-serif';
+      ctx.fillText(fill(t('dielineSub'), { flute: fluteName(flute.key), L: dv(L), W: dv(W), H: dv(H), u: lenU }), 150, 180);
+      ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(150, 210); ctx.lineTo(2820, 210); ctx.stroke();
+
+      const g = 30, totalW = g + L + W + L + W, totalH = H + W;
+      const marginX = 200, marginY = 300, labelGutter = 300;
+      const availW = 2970 - marginX*2 - labelGutter, availH = 2100 - marginY*2;
+      const scale = Math.min(availW/totalW, availH/totalH);
+      const startX = marginX + (availW - totalW*scale)/2;
+      const startY = marginY + (availH - totalH*scale)/2;
+      const sG = g*scale, sL = L*scale, sW = W*scale, sH = H*scale, sF = (W/2)*scale;
+      function dl(x1, y1, x2, y2, crease) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        if (crease) { ctx.strokeStyle = '#0284C7'; ctx.setLineDash([12, 12]); ctx.lineWidth = 3; }
+        else { ctx.strokeStyle = '#EF4444'; ctx.setLineDash([]); ctx.lineWidth = 4; }
+        ctx.stroke();
+      }
+      const yFlapTop = startY, yH1 = startY + sF, yH2 = startY + sF + sH, yFlapBot = startY + sF + sH + sF;
+      const xG = startX, xL1 = startX + sG, xW1 = xL1 + sL, xL2 = xW1 + sW, xW2 = xL2 + sL, xEnd = xW2 + sW;
+
+      ctx.fillStyle = 'rgba(217, 119, 6, 0.08)';
+      ctx.beginPath();
+      ctx.moveTo(xG, yH1 + 50*scale); ctx.lineTo(xL1, yH1);
+      ctx.lineTo(xL1, yH2); ctx.lineTo(xG, yH2 - 50*scale);
+      ctx.closePath(); ctx.fill();
+
+      dl(xL1, yH1, xEnd, yH1, true); dl(xL1, yH2, xEnd, yH2, true);
+      [xL1, xW1, xL2, xW2].forEach(x => dl(x, yH1, x, yH2, true));
+
+      dl(xG, yH1 + 50*scale, xL1, yH1, false);
+      dl(xL1, yH2, xG, yH2 - 50*scale, false);
+      dl(xG, yH1 + 50*scale, xG, yH2 - 50*scale, false);
+      [xL1, xW1, xL2, xW2, xEnd].forEach(x => { dl(x, yH1, x, yFlapTop, false); dl(x, yH2, x, yFlapBot, false); });
+      dl(xL1, yFlapTop, xEnd, yFlapTop, false);
+      dl(xL1, yFlapBot, xEnd, yFlapBot, false);
+      // right edge of the body panel — the free edge that meets the glue tab
+      dl(xEnd, yH1, xEnd, yH2, false);
+
+      ctx.fillStyle = '#64748B';
+      ctx.font = '28px "IBM Plex Mono", "Malgun Gothic", monospace';
+      ctx.textAlign = 'center'; ctx.setLineDash([]);
+      ctx.fillText(`${axisLabel('L')}: ${dv(L)} ${lenU}`, xL1 + sL/2, yH1 + sH/2 + 8);
+      ctx.fillText(`${axisLabel('W')}: ${dv(W)} ${lenU}`, xW1 + sW/2, yH1 + sH/2 + 8);
+      ctx.fillText(`${axisLabel('H')}: ${dv(H)} ${lenU}`, xEnd + 100, yH1 + sH/2 + 8);
+      ctx.fillText(`${axisLabel('W')}/2: ${dv(W/2)} ${lenU}`, xL1 + sL/2, yH1 - 30);
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'mm', 'a4');
+      doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 297, 210);
+      doc.save('carton-dieline.pdf');
+    }
+
+    // ---------- PDF (report) ----------
+    function savePdf() {
+      const pad = n => String(n).padStart(2, '0');
+      const d = new Date();
+      const date = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      $('printReportTitle').innerHTML = t('reportTitle') +
+        `<span class="print-date">${t('dateLabel')}: ${date}</span>`;
+      const sr = $('stepResult');
+      const wasHidden = sr.classList.contains('hidden');
+      sr.classList.remove('hidden');
+      window.print();
+      if (wasHidden) sr.classList.add('hidden');
+    }
+
+    // ---------- Wiring ----------
+    $('palletType').addEventListener('change', () => { applyPalletType(); if (activeBestPack) calculateLayout(); });
+    // The number box is the source of truth; the slider follows it and its
+    // range moves with the unit, so clamp to the slider's live min/max.
+    $('maxHeight').addEventListener('input', () => { $('maxHeightInput').value = $('maxHeight').value; });
+    $('maxHeightInput').addEventListener('input', () => {
+      const v = parseFloat($('maxHeightInput').value);
+      const sl = $('maxHeight');
+      if (!isNaN(v)) sl.value = Math.max(parseFloat(sl.min), Math.min(v, parseFloat(sl.max)));
+    });
+    $('maxCartonWeight').addEventListener('input', () => { $('maxCartonWeightInput').value = $('maxCartonWeight').value; });
+    $('maxCartonWeightInput').addEventListener('input', () => {
+      const v = parseFloat($('maxCartonWeightInput').value);
+      const w = $('maxCartonWeight');
+      if (!isNaN(v)) w.value = Math.max(parseFloat(w.min), Math.min(v, parseFloat(w.max)));
+    });
+    $('autoArrange').addEventListener('change', syncArrangeUI);
+    $('singleLayer').addEventListener('change', syncArrangeUI);
+
+    // Bootstrap in the default language. Must match the static markup and
+    // currentLang, otherwise the page repaints into another language.
+    syncArrangeUI();
+    applyPalletType();
+    switchLang('en');
+  </script>
+</body>
+</html>
