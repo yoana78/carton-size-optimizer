@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://carton-size-optimizer.pages.dev/sitemap.xml

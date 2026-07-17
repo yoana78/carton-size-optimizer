@@ -1,0 +1,8 @@
+# 301 migration: carton-size-optimizer.pages.dev -> cubefreight.pages.dev/carton/
+# More specific paths first; the catch-all handles / , /index.html, sitemap, etc.
+/ko/*        https://cubefreight.pages.dev/carton/ko/   301
+/zh/*        https://cubefreight.pages.dev/carton/zh/   301
+/about/*     https://cubefreight.pages.dev/about/       301
+/privacy/*   https://cubefreight.pages.dev/privacy/     301
+/contact/*   https://cubefreight.pages.dev/contact/     301
+/*           https://cubefreight.pages.dev/carton/      301
